@@ -1,19 +1,22 @@
-# AI Systems Hub Architecture
+# Architecture
 
 ## Purpose
 
-The AI Auto Repair Receptionist is a modular voice automation platform designed to handle inbound customer calls for automotive repair shops.
+The AI Auto Repair Receptionist is a modular voice automation platform that handles inbound customer phone calls for automotive repair shops.
 
-The platform consists of multiple independent services orchestrated by n8n. Each service has a single responsibility and communicates with external systems such as Twilio, ElevenLabs, Google Sheets, and Google Calendar.
+Its primary responsibility is to answer calls, understand customer requests, retrieve business information, book appointments, update customer records, send notifications, and transfer callers to a human when necessary.
+
+The system is designed to automate front-desk operations while maintaining reliability, accuracy, and a natural conversational experience.
 
 ---
 
 # High-Level Architecture
 
+```
 Customer
     │
     ▼
-Twilio
+Twilio Voice
     │
     ▼
 ElevenLabs AI Agent
@@ -22,314 +25,325 @@ ElevenLabs AI Agent
 n8n Workflow Engine
     │
     ├── Business Configuration
+    ├── Service Estimate Engine
+    ├── Customer Lookup
+    ├── Appointment Lookup
+    ├── Booking Engine
+    ├── Availability Engine
+    ├── Rescheduling Engine
+    ├── Cancellation Engine
     ├── Session Manager
-    ├── Knowledge Base
-    ├── Appointment Engine
-    ├── Calendar Integration
-    ├── Customer CRM
     ├── SMS Notification Service
     ├── Human Handoff
-    ├── Post-Call Processing
-    └── Scheduled Jobs
-
+    ├── Post-Call Processor
+    └── Reminder Engine
             │
             ▼
-
 Google Sheets
 Google Calendar
 Twilio API
+```
 
 ---
 
-# System Components
+# External Services
 
-## 1. Twilio
+## Twilio
 
-Responsibilities
+Twilio provides all telecommunications functionality.
 
-- Receives inbound calls
-- Routes calls to ElevenLabs
+Responsibilities:
+
+- Receives inbound phone calls
+- Transfers calls to shop staff
 - Sends SMS notifications
-- Transfers calls to humans
-- Terminates calls
+- Terminates phone calls
 - Owns the business phone number
 
-Twilio is responsible only for telecommunications.
-
-Business logic never lives inside Twilio.
+Twilio contains no business logic.
 
 ---
 
-## 2. ElevenLabs Voice Agent
+## ElevenLabs
 
-Responsibilities
+ElevenLabs provides the conversational AI layer.
 
-- Speech recognition
-- Speech synthesis
-- Natural conversation
+Responsibilities:
+
+- Speech-to-text
+- Text-to-speech
+- Natural language conversation
 - Intent recognition
-- Information collection
 - Tool invocation
 
-The AI agent never performs business logic directly.
-
-Whenever information must be retrieved or modified, it calls an n8n workflow.
+ElevenLabs is responsible only for conversation. All business logic is delegated to the workflow engine.
 
 ---
 
-## 3. n8n Workflow Engine
+## OpenAI
 
-n8n is the central orchestration layer.
+OpenAI provides language reasoning used by the AI agent when required.
 
-Every business operation passes through n8n.
+Responsibilities:
 
-Responsibilities include
+- Language understanding
+- Reasoning
+- Structured responses
+- Tool selection support
 
-- booking appointments
-- rescheduling
-- cancellations
-- service lookup
-- pricing lookup
-- availability lookup
-- customer updates
-- SMS automation
-- call logging
-- human handoff
-- workflow coordination
-
-No permanent business data should originate inside n8n.
-
----
-
-# Internal Services
-
-## Business Configuration
-
-Contains shop-specific configuration.
-
-Examples
-
-- business name
-- phone number
-- address
-- hours
-- timezone
-- owner information
-- booking rules
-
-Allows one workflow to support multiple repair shops.
-
----
-
-## Knowledge Base
-
-Primary source of truth for services.
-
-Contains
-
-- services
-- descriptions
-- estimated duration
-- starting prices
-- categories
-- keywords
-
-Current implementation
-
-Google Sheets
-
-Future
-
-Database
-
----
-
-## Session Manager
-
-Tracks active phone calls.
-
-Responsibilities
-
-- caller phone number
-- call SID
-- temporary session state
-- active workflow state
-
-Uses
-
-- n8n static data
-- Sessions Google Sheet
-
-The Session Manager exists only for the duration of a conversation.
-
----
-
-## Appointment Engine
-
-Responsible for all booking logic.
-
-Functions
-
-- create appointments
-- reschedule appointments
-- cancel appointments
-- validate requests
-- prevent duplicate bookings
-- generate confirmations
-
-The Appointment Engine never speaks directly to customers.
-
-It only returns structured data to ElevenLabs.
-
----
-
-## Calendar Integration
-
-Current provider
-
-Google Calendar
-
-Responsibilities
-
-- availability lookup
-- create events
-- update events
-- delete events
-
-Google Calendar is the scheduling authority.
-
----
-
-## Customer CRM
-
-Stores customer history.
-
-Current implementation
-
-Google Sheets
-
-Contains
-
-- customer information
-- phone number
-- notes
-- previous interactions
-- last visit
-
-Future implementation
-
-Dedicated database.
-
----
-
-## SMS Notification Service
-
-Uses Twilio.
-
-Handles
-
-- booking confirmations
-- reminder messages
-- cancellation messages
-- appointment updates
-
----
-
-## Human Handoff
-
-Transfers active calls to shop staff.
-
-Responsibilities
-
-- determine transfer eligibility
-- initiate transfer
-- log transfer result
-- request callback when unavailable
-
----
-
-## Post-Call Processing
-
-Runs after every completed conversation.
-
-Responsibilities
-
-- save conversation summary
-- update customer notes
-- log interaction
-- prepare future context
-
----
-
-## Scheduled Jobs
-
-Background automations.
-
-Current jobs
-
-- appointment reminders
-- cleanup tasks
-
-Future jobs
-
-- follow-up reminders
-- missed-call outreach
-- maintenance reminders
-- customer reactivation
-
----
-
-# Data Sources
-
-## Google Sheets
-
-Current source of truth for
-
-- services
-- customer records
-- call logs
-- sessions
-- business configuration
+Business rules remain outside the language model.
 
 ---
 
 ## Google Calendar
 
-Source of truth for
+Google Calendar is the scheduling authority.
 
-- appointment availability
-- scheduled appointments
+Responsibilities:
+
+- Store appointments
+- Check availability
+- Create appointments
+- Update appointments
+- Delete appointments
+
+Appointment availability is never assumed and must always be verified.
 
 ---
 
-# Guiding Principles
+## Google Sheets
 
-Business logic belongs in n8n.
+Google Sheets currently serves as the application's operational data store.
 
-Voice belongs in ElevenLabs.
+Stores:
 
-Telephony belongs in Twilio.
+- Business configuration
+- Services
+- Customers
+- Appointments
+- Sessions
+- Call logs
 
-Scheduling belongs in Google Calendar.
+Future versions may migrate to a relational database.
 
-Business data belongs in Google Sheets.
+---
 
-Each component has a single responsibility.
+# Internal Components
 
-No component should duplicate another component's responsibility.
+## Business Configuration
+
+Provides shop-specific configuration used throughout the workflow.
+
+Contains:
+
+- Shop information
+- Business hours
+- Appointment settings
+- Pricing configuration
+- General settings
+
+---
+
+## Booking Engine
+
+Responsible for creating new appointments.
+
+Responsibilities:
+
+- Validate booking requests
+- Collect required information
+- Check calendar availability
+- Create appointments
+- Update customer records
+- Send confirmation messages
+
+---
+
+## Availability Engine
+
+Determines available appointment times.
+
+Responsibilities:
+
+- Parse requested dates
+- Query Google Calendar
+- Calculate available time slots
+- Return availability
+
+---
+
+## Service Estimate Engine
+
+Provides approximate repair estimates.
+
+Responsibilities:
+
+- Retrieve service information
+- Return approximate pricing
+- Return estimated duration
+- Include pricing disclaimers
+
+---
+
+## Customer Lookup
+
+Retrieves existing customer information.
+
+Responsibilities:
+
+- Search customer records
+- Retrieve previous history
+- Return customer details
+
+---
+
+## Appointment Lookup
+
+Finds existing appointments.
+
+Responsibilities:
+
+- Locate appointments
+- Validate appointment information
+- Return appointment details
+
+---
+
+## Rescheduling Engine
+
+Updates existing appointments.
+
+Responsibilities:
+
+- Find appointment
+- Verify new availability
+- Update calendar
+- Update customer records
+- Send confirmation
+
+---
+
+## Cancellation Engine
+
+Cancels appointments.
+
+Responsibilities:
+
+- Locate appointment
+- Remove calendar event
+- Update records
+- Notify customer
+
+---
+
+## Session Manager
+
+Maintains temporary state during active phone calls.
+
+Responsibilities:
+
+- Track active sessions
+- Store temporary conversation data
+- Associate calls with customers
+- Clean expired sessions
+
+---
+
+## SMS Notification Service
+
+Sends automated text messages.
+
+Supports:
+
+- Booking confirmations
+- Reschedule confirmations
+- Cancellation confirmations
+- Appointment reminders
+
+---
+
+## Human Handoff
+
+Transfers callers to shop personnel.
+
+Responsibilities:
+
+- Initiate transfers
+- Detect transfer outcome
+- Log transfer status
+- Return call outcome
+
+---
+
+## Reminder Engine
+
+Runs scheduled background tasks.
+
+Responsibilities:
+
+- Monitor upcoming appointments
+- Send reminder SMS
+- Prevent duplicate reminders
+
+---
+
+## Post-Call Processor
+
+Processes completed conversations.
+
+Responsibilities:
+
+- Store conversation summaries
+- Update customer notes
+- Update appointment notes
+- Save call records
+
+---
+
+# Data Flow
+
+A typical customer interaction follows this sequence:
+
+1. Customer calls the shop.
+2. Twilio receives the call.
+3. ElevenLabs conducts the conversation.
+4. ElevenLabs invokes tools through the n8n workflow.
+5. The workflow retrieves or updates business data.
+6. Google Calendar is consulted whenever scheduling information is required.
+7. Google Sheets stores customer, appointment, and operational data.
+8. Twilio sends SMS notifications when appropriate.
+9. After the conversation ends, post-call processing updates customer records and conversation summaries.
+
+---
+
+# Design Principles
+
+The architecture follows several guiding principles:
+
+- Business logic belongs in n8n.
+- Conversation belongs in ElevenLabs.
+- Telephony belongs in Twilio.
+- Scheduling belongs in Google Calendar.
+- Business data belongs in Google Sheets.
+- Components should have a single responsibility.
+- Workflows should remain modular and reusable.
+- Reliability is prioritized over unnecessary complexity.
+- Customer data should have a single source of truth.
 
 ---
 
 # Future Architecture
 
-Planned improvements
+Planned improvements include:
 
-- PostgreSQL / Supabase
-- Vector database
-- Automated testing
-- Regression testing
-- AI Workflow Auditor
-- Prompt Reviewer
-- Conversation Evaluator
-- Analytics Dashboard
-- Deployment Pipeline
+- PostgreSQL or Supabase for structured data
+- Vector database for semantic knowledge retrieval
+- Automated regression testing
+- AI workflow auditing
+- Conversation quality evaluation
+- Analytics dashboard
+- Multi-shop architecture
+- CRM integrations
+- Customer history improvements
+- Deployment pipeline
+- Monitoring and alerting
