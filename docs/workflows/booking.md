@@ -2,9 +2,11 @@
 
 ## Purpose
 
-The Booking workflow creates a new customer appointment after all required booking information has been collected, appointment availability has been confirmed, and the customer has explicitly approved the appointment details.
+The Booking workflow is responsible for creating a new repair appointment after all required customer information has been collected, appointment availability has been confirmed, and the customer has explicitly approved the appointment.
 
-The workflow coordinates scheduling, customer records, appointment records, and customer notifications while ensuring the booking process is completed only once.
+This workflow serves as the final step of the appointment scheduling process. It coordinates multiple backend systems to ensure that the appointment, customer information, notifications, and business records remain synchronized.
+
+This workflow **does not determine appointment availability**. Availability must already have been verified before booking begins.
 
 ---
 
@@ -12,95 +14,303 @@ The workflow coordinates scheduling, customer records, appointment records, and 
 
 The workflow begins when the AI calls the `book_appointment` tool.
 
-The tool must only be invoked after the booking process has been fully completed during the conversation.
+The tool should only be invoked after the customer has completed the booking conversation and has explicitly confirmed the appointment details.
+
+This workflow should only execute once for a single appointment.
+
+---
+
+# Purpose Within the System
+
+The Booking workflow is responsible for:
+
+- Creating new appointments
+- Updating customer records
+- Updating appointment records
+- Creating calendar events
+- Sending confirmation messages
+- Returning structured booking results to the AI
+
+It is **not responsible** for:
+
+- Finding available appointment times
+- Estimating repair prices
+- Answering service questions
+- Rescheduling appointments
+- Cancelling appointments
+
+Those responsibilities belong to separate workflows.
 
 ---
 
 # Preconditions
 
-The following conditions must already be true before this workflow starts:
+Before this workflow executes, **all** of the following conditions must already be true.
 
-- Appointment availability has been confirmed using the Availability workflow.
-- The customer's first name has been collected.
-- The customer's phone number has been collected.
-- The vehicle year has been collected.
-- The vehicle make has been collected.
-- The vehicle model has been collected.
-- The requested service has been collected.
-- The AI has presented a complete booking summary.
-- The customer has responded with a clear confirmation.
-- The booking tool has not already been executed for this appointment.
+## Appointment Availability
 
-If any of these conditions are not satisfied, the workflow must not execute.
+- The Availability workflow has confirmed the requested appointment is available.
+- The appointment time has not changed since availability was confirmed.
+
+## Customer Information
+
+The AI has collected:
+
+- Customer first name
+- Customer phone number
+- Vehicle year
+- Vehicle make
+- Vehicle model
+- Requested service or customer concern
+
+## Conversation Requirements
+
+Before calling the tool, the AI must:
+
+- Read a complete booking summary.
+- Ask the customer for confirmation.
+- Receive a clear affirmative response.
+
+Examples include:
+
+- Yes
+- Sounds good
+- Go ahead
+- Book it
+- That works
+
+If the customer asks to change anything, the booking workflow must not execute until the updated summary has been confirmed again.
+
+## Tool Requirements
+
+The booking tool must not have already been called for the current appointment.
+
+Duplicate booking attempts should never occur.
 
 ---
 
 # Required Inputs
 
-The workflow accepts the following information:
+The workflow accepts the following information.
 
-- Requested appointment date and/or time
-- Customer name
-- Customer phone number
-- Vehicle year
-- Vehicle make
-- Vehicle model
+## Customer
+
+- First name
+- Phone number
+
+## Vehicle
+
+- Year
+- Make
+- Model
+
+## Appointment
+
+- Appointment date
+- Appointment start time
+- Appointment end time
+
+## Service
+
 - Requested service
+- Service category
+- Service details
 - Estimated repair duration
 - Starting price (when available)
 - Starting price text (when available)
-- Service category
-- Service details
-- Confirmed appointment start time
-- Confirmed appointment end time
 
 ---
 
 # Business Rules
 
-The workflow enforces the following rules:
+The workflow follows these business rules.
 
-- Availability must be confirmed before booking.
+## Booking Rules
+
+- Availability must always be confirmed before booking.
 - Customer confirmation is mandatory.
-- The booking summary must be read back before confirmation.
-- The workflow must execute only once.
-- Existing customer records should be updated when possible.
-- Appointment information must remain synchronized with Google Calendar.
-- SMS notifications are sent only after a successful booking.
-- Responses returned to the AI are structured rather than conversational.
+- Booking cannot occur before the confirmation step.
+- Booking may only occur once.
+
+## Data Rules
+
+Customer information should remain synchronized across all business systems.
+
+Appointment information should remain synchronized across:
+
+- Google Calendar
+- Customer records
+- Appointment records
+
+## Communication Rules
+
+Confirmation messages are sent only after successful booking.
+
+The AI must never claim an appointment has been booked until the workflow reports success.
+
+## Response Rules
+
+The booking tool returns structured data.
+
+The AI converts that structured data into a natural conversation with the customer.
 
 ---
 
-# External Systems
+# Conversation Contract
 
-The workflow communicates with:
+The ElevenLabs prompt establishes the following conversational requirements.
 
-- Google Calendar
-- Google Sheets
-- Twilio SMS
+The AI must:
 
-Google Calendar stores the appointment.
+1. Collect all required booking information.
+2. Verify appointment availability.
+3. Read a complete booking summary.
+4. Stop speaking.
+5. Wait for customer confirmation.
+6. Call the booking tool.
+7. Wait for the booking response.
+8. Inform the customer only after a successful booking.
 
-Google Sheets stores customer, appointment, and operational records.
+The AI must **never**:
 
-Twilio delivers confirmation messages.
+- Call the booking tool before confirmation.
+- Ask for confirmation twice unless information changes.
+- Say an appointment is booked before the workflow succeeds.
+- Guess booking results.
 
 ---
 
 # Processing Sequence
 
-1. Validate workflow preconditions.
-2. Parse the requested appointment information.
-3. Read the active session.
-4. Locate any existing booking.
-5. Verify appointment availability.
-6. Prepare the booking payload.
-7. Create the appointment.
-8. Update customer records.
-9. Update appointment records.
-10. Send the booking confirmation SMS.
-11. Record SMS delivery status.
-12. Return a structured success response.
+The workflow executes the following sequence.
+
+## Step 1
+
+Receive booking request.
+
+---
+
+## Step 2
+
+Validate required information.
+
+The workflow verifies:
+
+- Customer information
+- Vehicle information
+- Appointment information
+- Service information
+
+---
+
+## Step 3
+
+Validate booking request.
+
+The workflow ensures:
+
+- Appointment is available.
+- Required fields exist.
+- Request is valid.
+
+---
+
+## Step 4
+
+Create appointment.
+
+The appointment is created inside the scheduling system.
+
+---
+
+## Step 5
+
+Update customer information.
+
+Existing customers are updated.
+
+New customers are created if necessary.
+
+---
+
+## Step 6
+
+Update appointment records.
+
+Business records are synchronized.
+
+---
+
+## Step 7
+
+Create Google Calendar event.
+
+Calendar becomes the source of truth for the scheduled appointment.
+
+---
+
+## Step 8
+
+Generate confirmation message.
+
+The workflow prepares customer notification information.
+
+---
+
+## Step 9
+
+Send SMS confirmation.
+
+Twilio delivers the appointment confirmation.
+
+---
+
+## Step 10
+
+Record notification status.
+
+SMS delivery information is stored for auditing and troubleshooting.
+
+---
+
+## Step 11
+
+Return structured response.
+
+The workflow returns booking results back to the AI.
+
+---
+
+# External Systems
+
+This workflow integrates with several external systems.
+
+## Google Calendar
+
+Responsible for:
+
+- Appointment creation
+- Schedule synchronization
+- Calendar visibility
+
+---
+
+## Google Sheets
+
+Responsible for:
+
+- Customer records
+- Appointment records
+- Operational business data
+
+---
+
+## Twilio
+
+Responsible for:
+
+- Booking confirmation SMS
+- Customer notifications
 
 ---
 
@@ -108,26 +318,79 @@ Twilio delivers confirmation messages.
 
 Successful execution produces:
 
-- Calendar appointment
+- Created appointment
 - Updated customer record
 - Updated appointment record
-- Booking confirmation SMS
-- Structured booking response returned to the AI
+- Google Calendar event
+- SMS confirmation
+- Structured booking response
+
+---
+
+# Success Response
+
+A successful booking response includes information such as:
+
+- Booking completed successfully
+- Appointment date
+- Appointment time
+- Customer information
+- Vehicle information
+- Appointment identifier (when available)
+
+The AI uses this information to communicate with the customer.
 
 ---
 
 # Failure Conditions
 
-The workflow terminates without creating an appointment if:
+The workflow does not create an appointment if any of the following occur.
 
-- Availability cannot be verified.
-- The requested time is unavailable.
-- Required customer information is missing.
-- Customer confirmation has not been received.
-- Appointment creation fails.
-- An external dependency returns an error.
+## Validation Failures
 
-The workflow returns a structured error response so the AI can continue assisting the customer.
+- Missing customer information
+- Missing vehicle information
+- Missing appointment information
+- Missing service information
+
+---
+
+## Availability Failures
+
+- Appointment no longer available
+- Calendar conflict
+- Invalid appointment time
+
+---
+
+## Customer Failures
+
+- Customer did not confirm
+- Customer changed appointment details
+- Customer cancelled booking
+
+---
+
+## System Failures
+
+- Calendar unavailable
+- Google Sheets unavailable
+- Twilio unavailable
+- Internal workflow error
+- External API error
+
+---
+
+# Error Handling
+
+When booking fails:
+
+- No appointment should be created.
+- Partial updates should be avoided whenever possible.
+- The workflow returns structured error information.
+- The AI should continue assisting the customer naturally.
+
+The AI should never expose internal workflow errors to the customer.
 
 ---
 
@@ -136,18 +399,66 @@ The workflow returns a structured error response so the AI can continue assistin
 This workflow depends on:
 
 - Availability Workflow
-- Customer records
-- Session Manager
+- Customer Records
+- Session Management
 - Google Calendar
-- SMS Notification Service
+- Google Sheets
+- Twilio
+- Business Configuration
 
 ---
 
 # Related Workflows
 
+## Upstream
+
+- Service Estimates
 - Availability
 - Customer Lookup
-- Rescheduling
-- Cancellation
+
+These workflows typically execute before Booking.
+
+## Downstream
+
 - Reminder Engine
 - Post-Call Processing
+
+These workflows execute after a successful booking.
+
+## Parallel Workflows
+
+- Rescheduling
+- Cancellation
+- Human Handoff
+
+These workflows interact with existing appointments but do not create new ones.
+
+---
+
+# Engineering Notes
+
+## Source of Truth
+
+The Booking workflow is the only workflow responsible for creating appointments.
+
+Availability determines whether an appointment *can* be scheduled.
+
+Booking determines whether an appointment *is* scheduled.
+
+These responsibilities should remain separate.
+
+---
+
+## Design Principles
+
+The workflow follows several architectural principles.
+
+- Single responsibility
+- Explicit customer confirmation
+- Structured tool responses
+- Backend validation
+- Conversation separated from implementation
+- Calendar as scheduling authority
+- Idempotent booking behavior (no duplicate bookings)
+
+Future modifications should preserve these principles unless the system architecture is intentionally redesigned.
