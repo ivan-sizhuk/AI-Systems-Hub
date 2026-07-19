@@ -117,6 +117,18 @@ conversations.md
 
 ---
 
+## Call Log
+
+Records call-transfer events for shop follow-up.
+
+Documented in:
+
+```
+call-log.md
+```
+
+---
+
 # Relationships
 
 ```

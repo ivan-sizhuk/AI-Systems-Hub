@@ -82,7 +82,7 @@ human_handoff is the only tool that writes Call_Log. No other tabs are touched.
 # Related Workflows
 
 - [human-handoff.md](../conversations/human-handoff.md)
-- Logging: Call_Logs records (see data model)
+- Logging: [call-log.md](../data-model/call-log.md)
 
 ---
 

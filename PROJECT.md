@@ -110,7 +110,7 @@ Workflow:
 - n8n
 
 AI:
-- LLM configured within the ElevenLabs agent
+- LLM configured within the ElevenLabs agent (currently Gemini 2.5 Flash)
 
 Storage:
 - Google Sheets

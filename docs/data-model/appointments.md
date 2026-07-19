@@ -193,7 +193,7 @@ Duration:
 90 minutes
 
 Status:
-Confirmed
+Booked
 ```
 
 ---
