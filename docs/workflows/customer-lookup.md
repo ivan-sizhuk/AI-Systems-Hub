@@ -16,7 +16,7 @@ This workflow **never creates or modifies customer data**. Its responsibility is
 
 The workflow begins when the AI calls the `lookup_customer` tool.
 
-The tool should be called after obtaining the customer's phone number.
+The caller's phone number is injected automatically at call start (caller_phone dynamic variable). The AI calls this tool immediately without asking for a phone number.
 
 Typical triggers include:
 
@@ -59,9 +59,9 @@ Before this workflow executes:
 
 ## Customer Information
 
-The AI should collect:
+No information needs to be collected. The caller's phone number is available automatically (caller_phone), and the workflow also resolves it from stored session data when needed.
 
-- Customer phone number
+The AI asks for a phone number only when the lookup returns no result AND caller_phone is empty. In that case it asks for the number the customer originally booked with.
 
 The phone number is the primary identifier used to search for customer records.
 
@@ -85,7 +85,7 @@ The workflow follows these rules.
 
 ## Lookup Rules
 
-Customer searches should always be performed using the provided phone number.
+Customer searches should always be performed using the caller's phone number (automatic first, manually provided only as the fallback described above).
 
 If multiple customer records exist, the workflow should return the best matching record.
 

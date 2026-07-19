@@ -126,6 +126,12 @@ The workflow follows these scheduling rules.
 
 Every appointment must be verified against the scheduling calendar before booking.
 
+Additional implemented behaviors:
+
+- Time-of-day requests (morning, afternoon, evening) filter available slots to the matching window.
+- Requests on closed days return a closed-day response naming the operating days.
+- When a day is fully booked, the workflow automatically searches the next open days, capped at 4 additional days.
+
 Availability must be checked:
 
 - Before booking
@@ -296,14 +302,15 @@ Google Calendar serves as the scheduling authority.
 
 ---
 
-## Google Sheets
+## Business Configuration (n8n)
 
 Responsible for:
 
-- Business configuration
-- Scheduling settings
-- Working hours
-- Operational data
+- Working hours (opening_hours)
+- Operating days (operating_days)
+- Timezone
+
+Working hours and operating days come from the n8n Business Config node, not Google Sheets.
 
 ---
 
@@ -315,7 +322,10 @@ Successful execution returns:
 - Available appointment windows
 - Suggested appointment times
 - Required appointment duration
+- confirmedStartTime and confirmedEndTime (exact ISO timestamps when a specific requested time is available)
 - Structured scheduling response
+
+confirmedStartTime and confirmedEndTime are a hard contract: the AI passes them unchanged into the Booking and Rescheduling workflows.
 
 No appointment is created during this workflow.
 

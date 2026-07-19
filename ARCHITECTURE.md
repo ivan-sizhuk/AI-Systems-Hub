@@ -78,20 +78,7 @@ Responsibilities:
 
 ElevenLabs is responsible only for conversation. All business logic is delegated to the workflow engine.
 
----
-
-## OpenAI
-
-OpenAI provides language reasoning used by the AI agent when required.
-
-Responsibilities:
-
-- Language understanding
-- Reasoning
-- Structured responses
-- Tool selection support
-
-Business rules remain outside the language model.
+The language model used for reasoning and tool selection is configured inside the ElevenLabs agent. There is no separate LLM integration in the workflow engine.
 
 ---
 
@@ -117,12 +104,13 @@ Google Sheets currently serves as the application's operational data store.
 
 Stores:
 
-- Business configuration
 - Services
 - Customers
 - Appointments
 - Sessions
 - Call logs
+
+Business configuration is not stored in Google Sheets. See Business Configuration below.
 
 Future versions may migrate to a relational database.
 
@@ -133,6 +121,8 @@ Future versions may migrate to a relational database.
 ## Business Configuration
 
 Provides shop-specific configuration used throughout the workflow.
+
+Configuration lives in an n8n Set node ("Business Config") as a JSON object, with two clones ("Business Config - Init" for the call-initiation chain and "Business Config - Reminder" for the scheduled reminder chain). All three must be updated together when configuration changes.
 
 Contains:
 

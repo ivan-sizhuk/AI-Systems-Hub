@@ -37,7 +37,7 @@ The Calendar Event is managed by backend workflows and should never be modified 
 | Start Time | Yes | Appointment start time. |
 | End Time | Yes | Appointment end time. |
 | Duration | Yes | Reserved appointment length. |
-| Status | Yes | Calendar event status. |
+| Status | No | Business status lives on the Appointment record, not the calendar event. A cancelled appointment's event is deleted. |
 | Notes | Optional | Additional scheduling notes. |
 
 ---
@@ -85,11 +85,13 @@ Calendar events may be created by:
 
 # Updated By
 
-Calendar events may be updated by:
+Calendar events are replaced rather than edited by workflows:
 
-- Rescheduling Workflow
-- Cancellation Workflow
-- Human staff
+- Rescheduling Workflow (creates the new event, verifies it, then deletes the old one)
+- Cancellation Workflow (deletes the event)
+- Human staff (may edit directly)
+
+The event description contains structured lines (Name, Phone, Vehicle, Service). The Phone line is parsed by the Appointment Lookup workflow to match events to callers — preserve this format. The shop owner's email is attached as an attendee for notification.
 
 ---
 

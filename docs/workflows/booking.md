@@ -128,6 +128,7 @@ The workflow follows these business rules.
 ## Booking Rules
 
 - Availability must always be confirmed before booking.
+- The workflow re-validates availability internally at booking time (duration-aware calendar check and closed-day check) before creating the event.
 - Customer confirmation is mandatory.
 - Booking cannot occur before the confirmation step.
 - Booking may only occur once.
@@ -217,9 +218,9 @@ The workflow ensures:
 
 ## Step 4
 
-Create appointment.
+Create the Google Calendar event.
 
-The appointment is created inside the scheduling system.
+The calendar event is the appointment's scheduling record and is created first, immediately after validation. All subsequent record updates reference it.
 
 ---
 
@@ -243,9 +244,9 @@ Business records are synchronized.
 
 ## Step 7
 
-Create Google Calendar event.
+Apply the rebooking policy.
 
-Calendar becomes the source of truth for the scheduled appointment.
+If the customer already has an active appointment (matched by phone number), the previous calendar event is deleted and the previous appointment record is marked "Rebooked". The system maintains one active appointment per phone number.
 
 ---
 
@@ -460,5 +461,6 @@ The workflow follows several architectural principles.
 - Conversation separated from implementation
 - Calendar as scheduling authority
 - Idempotent booking behavior (no duplicate bookings)
+- One active appointment per phone number (rebooking replaces the previous appointment and marks it "Rebooked")
 
 Future modifications should preserve these principles unless the system architecture is intentionally redesigned.

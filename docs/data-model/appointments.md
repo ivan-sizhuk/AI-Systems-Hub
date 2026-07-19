@@ -29,7 +29,7 @@ The AI uses appointment information to:
 |---------|:--------:|-------------|
 | Appointment ID | Yes | Unique appointment identifier. |
 | Customer ID | Yes | Links the appointment to a customer. |
-| Vehicle ID | Yes | Links the appointment to a vehicle. |
+| Vehicle ID | No | Logical reference only. The implementation stores vehicle fields inline (Vehicle Year, Vehicle Make, Vehicle Model); no vehicle identifier exists. |
 | Service | Yes | Requested repair or maintenance service. |
 | Appointment Date | Yes | Scheduled calendar date. |
 | Appointment Time | Yes | Scheduled start time. |
@@ -44,16 +44,18 @@ The AI uses appointment information to:
 
 # Appointment Status
 
-Typical appointment states include:
+The implementation uses exactly these status values:
 
-- Pending
-- Confirmed
+- Booked
 - Rescheduled
 - Cancelled
-- Completed
-- No Show
+- Rebooked (previous appointment replaced by a new booking from the same phone number)
 
-Status values should remain consistent across all workflows.
+Status values are load-bearing: the Reminder Engine sends reminders only for Booked and Rescheduled, and the Cancellation and Rescheduling workflows locate appointments only in those two states. Do not introduce new status values without updating those workflows.
+
+## Implementation Mapping
+
+Actual Appointments columns: Appointment ID, Created At, Status, Appointment Start, Appointment End, Duration Minutes, Customer Name, Phone, Vehicle Year, Vehicle Make, Vehicle Model, Service, Service Category, Service Details JSON, Starting At Price, Ballpark Time, Estimate Disclaimer, Calendar Event ID, SMS Sent?, Reminder Sent, Notes.
 
 ---
 

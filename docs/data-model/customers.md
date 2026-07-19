@@ -27,13 +27,21 @@ The AI uses customer information to:
 
 | Field | Required | Description |
 |---------|:--------:|-------------|
-| Customer ID | Optional | Internal unique identifier. |
+| Customer ID | Yes | Derived from the phone number (CUST-<digits>). It is the matching key for create-or-update writes. |
 | First Name | Yes | Customer's first name. |
 | Last Name | Optional | Customer's last name. |
 | Phone Number | Yes | Primary customer identifier for lookups. |
 | Email Address | Optional | Used for confirmations if supported. |
 | Preferred Contact Method | Optional | Phone, SMS, Email, etc. |
 | Notes | Optional | Internal customer notes. |
+
+---
+
+## Implementation Mapping
+
+Actual Customers columns: Customer ID, First Seen, Last Seen, Customer Name, Phone, Vehicle Year, Vehicle Make, Vehicle Model, Last Service, Last Appointment ID, Total Appointments, Notes.
+
+Preservation rules: First Seen and Notes are preserved across rebookings for returning customers; Last Seen, vehicle fields, and Last Service reflect the most recent booking.
 
 ---
 

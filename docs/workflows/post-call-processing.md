@@ -32,11 +32,11 @@ The workflow executes regardless of whether the call resulted in:
 The Post-Call Processing workflow is responsible for:
 
 - Finalizing the conversation
-- Saving conversation data
-- Cleaning up session information
-- Recording workflow outcomes
-- Updating business analytics
+- Saving the conversation summary to the appointment record (update-only, matched by caller phone)
+- Saving a timestamped conversation summary to the customer record
 - Preparing the system for future interactions
+
+Session cleanup is not performed here; it runs on the scheduled reminder cycle.
 
 It is **not responsible** for:
 
@@ -93,26 +93,15 @@ The workflow uses:
 
 The workflow follows these rules.
 
-## Session Rules
+## Notes Rules
 
-Every completed conversation should result in a finalized session.
+The conversation summary comes from the voice platform's post-call webhook (call summary field).
 
-Temporary session information should be removed after processing.
+Appointment notes are updated only for an existing appointment row matched by caller phone; no new appointment rows are created by this workflow.
 
----
+Customer notes are written with a timestamp prefix.
 
-## Analytics Rules
-
-Conversation outcomes should be recorded for reporting purposes.
-
-Examples include:
-
-- Appointment booked
-- Appointment cancelled
-- Appointment rescheduled
-- Human handoff
-- Information only
-- No action taken
+Matching by phone means the notes land on the first matching record when a caller has multiple records.
 
 ---
 

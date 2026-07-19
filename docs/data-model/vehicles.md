@@ -8,6 +8,12 @@ A customer may own multiple vehicles, and each vehicle may have multiple appoint
 
 The Vehicle entity allows the AI receptionist to accurately associate repair requests with the correct automobile.
 
+## Implementation Status
+
+This entity is a logical design and is NOT implemented as a separate record. Vehicles exist only as three inline columns (Vehicle Year, Vehicle Make, Vehicle Model) on the Customers and Appointments records. There are no vehicle identifiers and no vehicle relationships.
+
+Limitation: exactly one vehicle is stored per customer, and each new booking overwrites it. A customer with two vehicles cannot be represented today.
+
 ---
 
 # Description
