@@ -6,6 +6,8 @@ This repository is maintained by both human engineers and AI coding assistants.
 
 All modifications must follow the rules below.
 
+These rules are operationalized as standardized roles in ai-engineers/ — every engineering task should be performed under one of those role definitions.
+
 ---
 
 # Primary Goal
