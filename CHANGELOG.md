@@ -5,6 +5,7 @@
 - Documentation Audit performed; repository aligned to workflow V26.6 and prompt V27.
 - Added: docs/tools/ (nine tool contracts with data-access matrix), docs/integrations/ (six integrations plus OpenAI status note), production/ artifacts, OPERATIONS.md, CHANGELOG/DECISIONS/ROADMAP/TODO backfill, data-model/call-log.md.
 - Consistency sweep: corrected handoff escalation triggers, booking-conversation phone rule, appointment status example, Call_Log naming; recorded the configured LLM (Gemini 2.5 Flash) and confirmed no OpenAI usage anywhere.
+- Added tests/: the behavioral regression suite — authoritative expected-behavior specification with per-scenario contracts and the release regression checklist.
 
 ## Prompt V27 (current production)
 

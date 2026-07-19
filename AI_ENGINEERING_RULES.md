@@ -79,6 +79,8 @@ Every significant change should include:
 - Failure cases
 - Regression considerations
 
+The behavioral specification lives in tests/. Validate changes against the relevant scenario files and complete tests/regression-checklist.md before release. New features must add their scenarios in the same change.
+
 ---
 
 # Prompt Changes
