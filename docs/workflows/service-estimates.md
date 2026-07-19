@@ -199,6 +199,10 @@ Analyze requested repair.
 
 Identify matching service.
 
+Matching runs in order: exact catalog key match, unambiguous keyword routing (for example synthetic oil, rotors, all-four brake bundle), then scored word matching against catalog keys and labels with stemming and a rare-word bonus.
+
+Label wording feeds matching. Words before a "–" or "(" in a label carry more weight than qualifier words after them. Renaming labels in the catalog can change matching behavior.
+
 ---
 
 ## Step 4
@@ -251,6 +255,19 @@ Successful execution returns:
 - Pricing text
 - Structured estimate response
 
+## Tool Response Contract
+
+| Field | Meaning |
+|---|---|
+| estimatedMinutes | Estimated duration in minutes |
+| startingAtPrice | Starting price number (empty when unknown) |
+| startingAtText | Spoken price text, e.g. "$449 CAD and up" |
+| serviceCategory | Matched catalog key |
+| diagnosticOnly | true when the request is a vague symptom routed to a diagnostic |
+| needsService | true when the tool was called with an empty service field; the AI must call again with the service filled in (MISSING INPUT protocol) |
+| servicesLoaded | 0 when the service catalog could not be read; the response says so explicitly |
+| message | Natural-language basis for the AI's reply (includes duration and price) |
+
 ---
 
 # Success Response
@@ -274,7 +291,8 @@ The workflow may fail when:
 ## Service Failures
 
 - Requested repair cannot be identified.
-- Service does not exist in the catalog.
+
+When a named service does not exist in the catalog, the workflow does not return an error. It returns a bookable no-price response: estimated duration only, with a message offering to book the service and have the technician confirm time and price at the shop.
 
 ---
 

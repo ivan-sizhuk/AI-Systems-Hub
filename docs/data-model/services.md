@@ -63,6 +63,21 @@ Additional categories may be added as the business expands.
 
 ---
 
+# Implementation Mapping
+
+The Services catalog is a Google Sheets tab with exactly four columns:
+
+| Column | Meaning |
+|---|---|
+| key | snake_case identifier (e.g. ball_joint, brake_rotors_all). Referenced by workflow logic — never rename an existing key. |
+| label | Display and speech text. Label words feed service matching: words before a "–" or "(" carry more weight than qualifier words after them. Use "(each)" for per-unit services. |
+| duration_minutes | Drives appointment length in scheduling. |
+| starting_at | Starting price. A value of 0 makes the AI state duration only, with no price. |
+
+New rows are picked up automatically on the next call; no workflow changes are required to add a service.
+
+---
+
 # Relationships
 
 A service may belong to:

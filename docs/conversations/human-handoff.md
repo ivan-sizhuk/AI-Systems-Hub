@@ -36,6 +36,8 @@ Examples:
 
 > "Can you transfer me?"
 
+The transfer is a two-step confirmation: the AI responds first, and transfers only after the customer confirms or repeats the request. The AI never transfers speculatively as a first response to an unknown question — it offers a human and waits for a yes.
+
 ---
 
 ## Information Is Unavailable
@@ -53,13 +55,7 @@ Examples include:
 
 ## Customer Lookup Fails
 
-If the AI cannot confidently identify:
-
-- Customer
-- Appointment
-- Vehicle
-
-after reasonable attempts, the conversation should be transferred.
+If the customer lookup returns no result, the AI first asks for the phone number the customer originally booked with and retries. Transfer is appropriate only if identification still fails after that.
 
 ---
 

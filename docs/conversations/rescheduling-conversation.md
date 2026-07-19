@@ -78,9 +78,11 @@ Example:
 
 Call the Customer Lookup workflow if necessary.
 
+Identification is automatic: the caller's phone number (caller_phone) is available at call start. Never ask for a phone number unless the lookup returns no result and caller_phone is empty.
+
 Use available information such as:
 
-- Phone number
+- Caller phone number (automatic)
 - Customer name
 - Appointment date
 

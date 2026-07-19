@@ -29,53 +29,20 @@ Once the conversation ends, the session may be discarded unless portions of its 
 
 | Field | Required | Description |
 |---------|:--------:|-------------|
-| Session ID | Yes | Unique conversation identifier. |
-| Call ID | Optional | Identifier from the telephony provider. |
-| Customer ID | Optional | Linked customer, if identified. |
-| Active Intent | Yes | Customer's current objective. |
-| Conversation State | Yes | Current stage of the conversation. |
-| Collected Information | Optional | Information gathered during the call. |
-| Pending Workflow | Optional | Next workflow waiting to execute. |
-| Workflow Status | Optional | Status of the active workflow. |
-| Last AI Response | Optional | Most recent assistant response. |
-| Created At | Optional | Session start time. |
-| Updated At | Optional | Last activity time. |
+| call_sid | Yes | Telephony call identifier. |
+| conversation_id | Optional | Voice-platform conversation identifier. |
+| caller_phone | Yes | Caller's phone number, captured at call start. |
+| stored_at | Yes | Timestamp used for expiry cleanup. |
+
+These four fields are the entire stored session. Its sole purpose is caller-phone continuity for tool calls (a mirror is kept in workflow static data for speed).
+
+All conversational state — intent, collected information, conversation stage — lives inside the ElevenLabs agent for the duration of the call and is never persisted to the session store.
 
 ---
 
-# Typical Intent Values
+# Session Lifecycle
 
-Examples include:
-
-- Booking
-- Pricing
-- Availability
-- Rescheduling
-- Cancellation
-- FAQ
-- Human Handoff
-
-Only one intent should normally be active at a time.
-
----
-
-# Conversation State
-
-Typical conversation states include:
-
-- Greeting
-- Identifying Intent
-- Collecting Vehicle Information
-- Estimating Service
-- Checking Availability
-- Awaiting Customer Confirmation
-- Booking Appointment
-- Rescheduling Appointment
-- Cancelling Appointment
-- Human Handoff
-- Completed
-
-These states help the AI determine what should happen next.
+Sessions are written at call start by the initiation webhook and deleted by an hourly cleanup task once expired.
 
 ---
 

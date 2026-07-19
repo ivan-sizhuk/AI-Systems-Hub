@@ -20,6 +20,8 @@ The scheduler checks for upcoming appointments that require reminder notificatio
 
 This workflow is not initiated by a customer conversation.
 
+The same scheduled run also performs session cleanup, deleting expired session records. This is a co-scheduled maintenance task, not a reminder responsibility.
+
 ---
 
 # Purpose Within the System
@@ -53,7 +55,14 @@ The appointment must:
 - Exist
 - Be active
 - Not be cancelled
-- Fall within the configured reminder window
+- Fall within the reminder window
+
+## Timing
+
+- The scheduler runs hourly.
+- The reminder window is 23.5 to 24.5 hours before the appointment start.
+- Appointments booked less than 2 hours ago are skipped (the customer just confirmed).
+- Only appointments with status Booked or Rescheduled qualify.
 
 ## Customer
 
@@ -105,6 +114,8 @@ Rescheduled appointments should receive reminders based on their updated appoint
 Each reminder should only be sent once.
 
 Reminder history should be recorded to prevent duplicate notifications.
+
+A failed SMS is not marked as sent; it remains eligible for retry while the appointment is still inside the reminder window.
 
 ---
 

@@ -37,8 +37,9 @@ It is **not responsible** for:
 - Booking appointments
 - Rescheduling appointments
 - Finding appointment availability
-- Updating customer information
 - Creating customer records
+
+The workflow does update the customer record after a successful cancellation.
 
 These responsibilities belong to other workflows.
 
@@ -95,6 +96,8 @@ The workflow follows these rules.
 ## Cancellation Rules
 
 Only existing appointments may be cancelled.
+
+The appointment identifier's source of truth is the Appointments record matched by caller phone number (status Booked or Rescheduled). An identifier supplied by the AI is used only as a fallback.
 
 The workflow must never attempt to cancel an appointment that cannot be identified.
 

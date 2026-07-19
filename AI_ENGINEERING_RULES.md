@@ -105,9 +105,11 @@ When modifying n8n:
 
 # Google Sheets
 
-Treat Google Sheets as the current source of truth.
+Treat Google Sheets as the current source of truth for operational records.
 
 Do not introduce hard-coded business data.
+
+Exception: shop-level configuration (name, hours, operating days, phone numbers, calendar ID, webhook secret) lives in the n8n Business Config node and its Init/Reminder clones. Update all three together when configuration changes.
 
 ---
 

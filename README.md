@@ -14,7 +14,7 @@ Current capabilities include:
 
 - Collecting vehicle and customer information
 
-- Answering frequently asked questions
+- Answering frequently asked questions (business hours, services, and pricing)
 
 - Looking up services from the shop's knowledge base
 
@@ -30,7 +30,7 @@ Current capabilities include:
 
 - Sending appointment confirmations and notifications
 
-- Capturing leads for follow-up
+- Capturing caller notes for follow-up after each call
 
 
 ## Project Goals
@@ -52,6 +52,8 @@ Current capabilities include:
 - Continuously improve through automated testing and AI-driven code reviews.
 
 - Build an internal AI engineering platform capable of developing, testing, and optimizing AI agents.
+
+Additional capabilities:
 
 - Updating business records through automated workflows
 

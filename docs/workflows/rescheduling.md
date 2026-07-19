@@ -55,6 +55,8 @@ The customer must be identified.
 
 The appointment to modify must exist.
 
+If the AI does not supply an appointment identifier, the workflow resolves it from the Appointments records by caller phone number, accepting only appointments with status Booked or Rescheduled.
+
 ## Availability
 
 The new appointment time must already be confirmed as available.
@@ -105,7 +107,7 @@ Customer information should remain unchanged unless separately updated.
 
 Google Calendar remains the scheduling source of truth.
 
-The existing calendar event should be updated rather than duplicated.
+The calendar event is replaced, not updated in place: the new event is created first, verified, and only then is the old event deleted. This ordering guarantees the customer never loses their slot if event creation fails.
 
 ## Notification Rules
 

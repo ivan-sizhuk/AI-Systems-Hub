@@ -79,7 +79,7 @@ Capabilities:
 - Sends cancellation SMS
 - Sends reminder SMS
 - Transfers calls to shop staff
-- Takes messages
+- Collects callback information when a transfer fails
 - Updates customer records
 - Creates appointment records
 - Stores conversation summaries
@@ -110,7 +110,7 @@ Workflow:
 - n8n
 
 AI:
-- OpenAI
+- LLM configured within the ElevenLabs agent
 
 Storage:
 - Google Sheets
