@@ -176,7 +176,8 @@ Collect any missing customer information.
 Typical information includes:
 
 - First name
-- Phone number
+
+The phone number comes from the caller_phone variable automatically. Ask for a number only when caller_phone is empty.
 
 If Customer Lookup already provided this information, do not ask again.
 
