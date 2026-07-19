@@ -61,20 +61,15 @@ If the customer lookup returns no result, the AI first asks for the phone number
 
 ## Backend Failure
 
-If any required workflow repeatedly fails, including:
+If a required workflow fails, the AI follows the failure script for that workflow (for example, a failed booking is confirmed manually by the shop). There is no automatic transfer on backend failure.
 
-- Booking
-- Rescheduling
-- Cancellation
-- Customer Lookup
-
-the AI should transfer the customer instead of continuing unsuccessfully.
+If failures repeat, the AI should offer a human — and transfer only after the caller says yes.
 
 ---
 
 ## Customer Frustration
 
-If the customer becomes frustrated, repeatedly asks for a human, or indicates dissatisfaction, the AI should prioritize transferring the conversation.
+A customer who repeatedly asks for a human has made an explicit request — follow the two-step confirmation and transfer. For general frustration, the AI offers a human and waits for a yes before transferring.
 
 ---
 

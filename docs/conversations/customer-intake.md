@@ -84,11 +84,9 @@ Transition to:
 
 Customer asks:
 
-- Business hours
-- Location
-- Services offered
-- Warranty
-- Shop policies
+- Business hours (answered from the business_hours variable)
+- Services offered (answered from the service catalog)
+- Location, warranty, shop policies (no business data — offer a human)
 - Other frequently asked questions
 
 Transition to:
