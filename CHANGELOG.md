@@ -1,6 +1,10 @@
 # Changelog
 
-## Workflow V26.8 (current production)
+## Workflow V26.9 (current production)
+
+- Bugfix: booking a full-day request could create an event spanning the whole business day (9:00-17:00) while correctly resolving the duration. Cause: get_availability returns null confirmed times for day-level requests, but also echoes the searched window (startTime/endTime); the model passed the window echo as confirmedStartTime/EndTime, and the booking guard trusted the received end wholesale. Fix: duration-integrity guard in booking (Code2) and rescheduling (Code4) — a confirmed pair that does not span exactly estimatedMinutes has its end recomputed from the duration. Legitimate confirmed pairs are untouched by construction. No prompt or schema changes.
+
+## Workflow V26.8
 
 - Bugfix: duration resolution was bypassed whenever the AI sent estimatedMinutes=90 — the tool schema's own "use 90 if unknown" instruction — so long jobs still booked 90-minute slots. An AI-sent 90 is now treated as a sentinel in all three duration gates (availability context, booking context, reschedule stored-duration preference) and resolved from the catalog / stored row. A genuine 90-minute service resolves back to 90; non-90 values remain authoritative. No prompt or schema changes.
 

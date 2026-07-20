@@ -27,7 +27,7 @@ Documented workflow: [rescheduling.md](../workflows/rescheduling.md)
 | caller_phone | Yes | The caller_phone dynamic variable, exactly as-is. |
 | eventId | No | Existing appointment ID from lookup_customer. Workflow resolves by phone when absent. |
 | confirmedStartTime | No* | Exact ISO start from get_availability. *Pass both when available. |
-| confirmedEndTime | No* | Exact ISO end from get_availability. |
+| confirmedEndTime | No* | Exact ISO end from get_availability. Guarded (V26.9): recomputed from the duration when the pair does not span estimatedMinutes. |
 
 ---
 
