@@ -1,6 +1,10 @@
 # Changelog
 
-## Workflow V26.7 (current production)
+## Workflow V26.8 (current production)
+
+- Bugfix: duration resolution was bypassed whenever the AI sent estimatedMinutes=90 — the tool schema's own "use 90 if unknown" instruction — so long jobs still booked 90-minute slots. An AI-sent 90 is now treated as a sentinel in all three duration gates (availability context, booking context, reschedule stored-duration preference) and resolved from the catalog / stored row. A genuine 90-minute service resolves back to 90; non-90 values remain authoritative. No prompt or schema changes.
+
+## Workflow V26.7
 
 - Option C architecture (approved by the Architecture Decision Report): scheduling duration is resolved inside the workflow.
 - Availability and booking contexts read the Services catalog and match the requested service to obtain duration when the AI supplies none; rescheduling reuses the stored Duration Minutes of the appointment being moved.

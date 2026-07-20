@@ -160,7 +160,7 @@ Calendar event spans the catalog duration (e.g. 10:00 AM - 3:00 PM for 300 minut
 
 - Call estimate_job_ballpark just to obtain a duration.
 - Volunteer a price because a duration was needed.
-- Book a long job into a 90-minute slot when the catalog is available.
+- Book a long job into a 90-minute slot when the catalog is available — including when the AI sends estimatedMinutes=90, the schema's "unknown" default (the V26.8 sentinel case).
 
 ---
 

@@ -20,7 +20,7 @@ SHOULD be called: after vehicle + service are known and the caller wants schedul
 MUST NOT be called: for basic intake; before a scheduling preference exists.
 Required inputs: request (caller's words); estimatedMinutes when known.
 Expected outputs: message; scenario; confirmedStartTime/EndTime when a specific time is open (pass through unchanged).
-Duration behavior (V26.7): when estimatedMinutes is absent, the workflow resolves it from the Services catalog via the service fields; 90 only when unmatched or the catalog is unavailable.
+Duration behavior (V26.7/V26.8): when estimatedMinutes is absent OR equals 90 (the schema's "use 90 if unknown" sentinel), the workflow resolves it from the Services catalog via the service fields; 90 only when unmatched or the catalog is unavailable. Non-90 values are authoritative.
 Common failure behavior: closed day → closed message; fully booked → capped next-open-day search, then suggest another week.
 
 ---
@@ -40,7 +40,7 @@ Common failure behavior: re-validation miss → alternatives message; calendar f
 SHOULD be called: once, after lookup_customer found the appointment, availability confirmed the new time, and the caller confirmed the move.
 MUST NOT be called: without a prior availability check; more than once; to create a second booking.
 Required inputs: eventId (from lookup), confirmed ISO times, caller_phone.
-Duration behavior (V26.7): the stored Duration Minutes of the appointment being moved is reused when the AI supplies none.
+Duration behavior (V26.7/V26.8): the stored Duration Minutes of the appointment being moved is reused when the AI supplies none or supplies the 90-minute sentinel.
 Expected outputs: rescheduled=true with new identifiers.
 Common failure behavior: create-fail → original preserved (retry with a new time is safe); delete-fail → needsHumanFollowup; unavailable → alternatives.
 
