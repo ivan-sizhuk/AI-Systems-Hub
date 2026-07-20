@@ -31,6 +31,8 @@ Complete this checklist before declaring any prompt or workflow version producti
 - [ ] Closed days cannot be booked
 - [ ] Rebooking replaces: old row marked "Rebooked", old event deleted, no phantom reminders
 - [ ] Calendar failure produces the manual-confirmation script, not a success claim
+- [ ] Long jobs booked without a price question occupy correct slot lengths (duration resolved from the catalog — V26.7)
+- [ ] Rescheduled appointments keep their stored duration (V26.7)
 - [ ] Appointments row, customer row (CUST-<digits>), and confirmation SMS all produced; First Seen and Notes preserved for returning customers
 
 # Reschedule / Cancel

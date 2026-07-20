@@ -6,8 +6,8 @@ Condensed per-tool behavioral spec. Full contracts: [docs/tools/](../docs/tools/
 
 # estimate_job_ballpark
 
-SHOULD be called: customer asks price, cost, or how long — or a duration is needed before availability.
-MUST NOT be called: proactively during booking just for a duration; before vehicle and service are known; with empty fields.
+SHOULD be called: customer asks price, cost, or how long.
+MUST NOT be called: to obtain a duration (scheduling resolves duration itself — V26.7); proactively during booking; before vehicle and service are known; with empty fields.
 Required inputs: service (customer's words, with front/rear/all-four descriptors), vehicleYear/Make/Model.
 Expected outputs: message with duration + starting price; serviceCategory; diagnosticOnly.
 Common failure behavior: MISSING INPUT in message → silent immediate re-call; sheet unavailable → bookable no-price message; unknown service → bookable no-price fallback.
@@ -20,6 +20,7 @@ SHOULD be called: after vehicle + service are known and the caller wants schedul
 MUST NOT be called: for basic intake; before a scheduling preference exists.
 Required inputs: request (caller's words); estimatedMinutes when known.
 Expected outputs: message; scenario; confirmedStartTime/EndTime when a specific time is open (pass through unchanged).
+Duration behavior (V26.7): when estimatedMinutes is absent, the workflow resolves it from the Services catalog via the service fields; 90 only when unmatched or the catalog is unavailable.
 Common failure behavior: closed day → closed message; fully booked → capped next-open-day search, then suggest another week.
 
 ---
@@ -39,6 +40,7 @@ Common failure behavior: re-validation miss → alternatives message; calendar f
 SHOULD be called: once, after lookup_customer found the appointment, availability confirmed the new time, and the caller confirmed the move.
 MUST NOT be called: without a prior availability check; more than once; to create a second booking.
 Required inputs: eventId (from lookup), confirmed ISO times, caller_phone.
+Duration behavior (V26.7): the stored Duration Minutes of the appointment being moved is reused when the AI supplies none.
 Expected outputs: rescheduled=true with new identifiers.
 Common failure behavior: create-fail → original preserved (retry with a new time is safe); delete-fail → needsHumanFollowup; unavailable → alternatives.
 

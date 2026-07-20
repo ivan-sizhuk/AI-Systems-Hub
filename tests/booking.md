@@ -132,6 +132,38 @@ New Booked row + event; old row Status="Rebooked", old event gone; no phantom re
 
 ---
 
+# Scenario: Long job booked without any price question
+
+## Customer Input
+
+"I need my timing belt done on my 2014 Camry. Can you fit me in Thursday?" (the caller never asks about price or duration)
+
+## Expected Conversation Flow
+
+Normal booking flow. No estimate is quoted and no price is volunteered. The workflow resolves the job's duration from the Services catalog on its own, so offered slots and the created event reflect the real job length (300 minutes for a timing belt), not the 90-minute default.
+
+## Expected Tool Usage
+
+1. get_availability — estimate_job_ballpark is NOT called; duration resolution happens inside the workflow (V26.7)
+2. book_appointment after selection + yes
+
+## Expected Outcome
+
+Calendar event spans the catalog duration (e.g. 10:00 AM - 3:00 PM for 300 minutes); Appointments row Duration Minutes matches the catalog; no price was ever mentioned.
+
+## Failure Conditions
+
+- Services catalog unavailable during the call: duration falls back to 90 minutes (pre-V26.7 behavior); booking still succeeds.
+- Requested window too small for the real duration: availability offers slots that actually fit the job.
+
+## Must Never
+
+- Call estimate_job_ballpark just to obtain a duration.
+- Volunteer a price because a duration was needed.
+- Book a long job into a 90-minute slot when the catalog is available.
+
+---
+
 # Scenario: caller_phone is empty (rare)
 
 ## Customer Input

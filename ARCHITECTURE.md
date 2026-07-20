@@ -157,6 +157,7 @@ Responsibilities:
 
 - Parse requested dates
 - Query Google Calendar
+- Resolve service duration from the service catalog when not supplied
 - Calculate available time slots
 - Return availability
 
