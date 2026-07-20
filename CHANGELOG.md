@@ -1,5 +1,17 @@
 # Changelog
 
+## Prompt V28 (current production)
+
+- Maintenance refactor from the Prompt Audit — behavior-identical by design; no business logic, tool selection, or customer-facing scripts changed.
+- F2: three estimate-disclaimer variants consolidated to one canonical line matching the workflow message ("The technician will confirm the final price after inspecting the vehicle.").
+- F5/F6: ESTIMATE RULES and the estimate tool's relay bullets merged into a single PRICING section with explicit BEFORE/RELAYING phases; startingAtPrice field-name leakage removed (relay is message-based).
+- F4: PHONE NUMBER RULES and ANTI-HALLUCINATION RULES moved directly after TOOL RULES; per-section phone restatements removed (single source, earlier position).
+- F7: hardcoded hours example replaced with a {{business_hours}}-based template (cannot go stale).
+- F8: handoff success now relays the tool's message (second scripted connect line removed).
+- F9/F11/F13/F14: once-only booking rule made explicit; legacy topic block collapsed; re-confirmation rule clarified; lookup_appointment not-found handling stated.
+- Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
+- Size: 334 → 322 lines with duplication removed.
+
 ## Workflow V26.9 (current production)
 
 - Bugfix: booking a full-day request could create an event spanning the whole business day (9:00-17:00) while correctly resolving the duration. Cause: get_availability returns null confirmed times for day-level requests, but also echoes the searched window (startTime/endTime); the model passed the window echo as confirmedStartTime/EndTime, and the booking guard trusted the received end wholesale. Fix: duration-integrity guard in booking (Code2) and rescheduling (Code4) — a confirmed pair that does not span exactly estimatedMinutes has its end recomputed from the duration. Legitimate confirmed pairs are untouched by construction. No prompt or schema changes.
