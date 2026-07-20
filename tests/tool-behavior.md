@@ -30,7 +30,7 @@ Common failure behavior: closed day → closed message; fully booked → capped 
 SHOULD be called: exactly once, only after availability confirmed + name collected + vehicle/service known + summary read + explicit yes in the caller's LAST message.
 MUST NOT be called: in the same turn as the summary; twice; without required fields; while caller_phone exists but was never used.
 Required inputs: request, name, vehicle fields, service, caller_phone; confirmed ISO times when availability returned them.
-Expected outputs: success + booked + appointment identifiers and display fields.
+Expected outputs: success + booked + appointment identifiers and display fields. Event span always equals estimatedMinutes (V26.9 guard recomputes the end if a received confirmed pair disagrees).
 Common failure behavior: re-validation miss → alternatives message; calendar failure → manual-confirmation script. Success announced only on booked=true.
 
 ---

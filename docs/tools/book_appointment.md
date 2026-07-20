@@ -28,7 +28,7 @@ Documented workflow: [booking.md](../workflows/booking.md)
 | service | Yes | Requested service or problem. |
 | caller_phone | Yes | The caller_phone dynamic variable, exactly as-is. |
 | confirmedStartTime | No* | Exact ISO start from get_availability. *Pass both when availability returned them. |
-| confirmedEndTime | No* | Exact ISO end from get_availability. |
+| confirmedEndTime | No* | Exact ISO end from get_availability. Guarded (V26.9): if the pair does not span estimatedMinutes, the event end is recomputed from the duration. |
 | estimatedMinutes | No | Duration; 90 when unknown. |
 | serviceCategory, serviceDetails | No | Catalog key and intake summary. |
 | startingAtPrice, startingAtText | No | Estimate carry-over for the appointment record. |

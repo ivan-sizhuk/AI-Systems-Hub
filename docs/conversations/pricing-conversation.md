@@ -89,7 +89,7 @@ Always pass the service in the customer's own words, keeping descriptors like fr
 
 If the workflow responds that the service field was missing, call it again immediately with the service filled in. Do not mention this to the customer.
 
-When relaying an estimate result, include the starting price it contains even if the customer only asked about timing.
+When relaying an estimate result, include the starting price it contains even if the customer only asked about timing (prompt PRICING section, RELAYING phase).
 
 The estimate may return:
 

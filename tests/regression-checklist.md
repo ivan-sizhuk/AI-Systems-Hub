@@ -33,6 +33,7 @@ Complete this checklist before declaring any prompt or workflow version producti
 - [ ] Calendar failure produces the manual-confirmation script, not a success claim
 - [ ] Long jobs booked without a price question occupy correct slot lengths (duration resolved from the catalog — V26.7)
 - [ ] Rescheduled appointments keep their stored duration (V26.7)
+- [ ] Calendar event spans always equal the resolved duration — window-echo confirmed pairs are recomputed (V26.9)
 - [ ] Appointments row, customer row (CUST-<digits>), and confirmation SMS all produced; First Seen and Notes preserved for returning customers
 
 # Reschedule / Cancel

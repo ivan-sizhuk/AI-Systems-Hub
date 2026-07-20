@@ -45,7 +45,7 @@ Documented workflow: [availability.md](../workflows/availability.md)
 | estimatedMinutes | Duration used for slot fitting. |
 | note | Reminder that shown times are examples. |
 
-confirmedStartTime and confirmedEndTime are a hard contract: pass both unchanged into book_appointment or reschedule_appointment. Never reformat or retype them.
+confirmedStartTime and confirmedEndTime are a hard contract: pass both unchanged into book_appointment or reschedule_appointment. Never reformat or retype them. They are null when no specific time was confirmed — the startTime/endTime echo fields are the searched day window, never confirmed times, and must not be passed as such. Booking and rescheduling recompute the event end from the duration if a received pair does not span estimatedMinutes (V26.9 integrity guard).
 
 ---
 
