@@ -1,5 +1,13 @@
 # Changelog
 
+## Workflow V26.7 (current production)
+
+- Option C architecture (approved by the Architecture Decision Report): scheduling duration is resolved inside the workflow.
+- Availability and booking contexts read the Services catalog and match the requested service to obtain duration when the AI supplies none; rescheduling reuses the stored Duration Minutes of the appointment being moved.
+- estimate_job_ballpark is now pricing-only (tool description updated); it is never called just to obtain a duration.
+- Long jobs booked without any price question now occupy correctly sized calendar slots; 90-minute fallback preserved when the catalog is unavailable.
+- No prompt changes; all conversational behavior preserved.
+
 ## Documentation (July 2026)
 
 - Documentation Audit performed; repository aligned to workflow V26.6 and prompt V27.

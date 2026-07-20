@@ -22,7 +22,7 @@ Backend behavior: [rescheduling.md](../docs/workflows/rescheduling.md) · Tool c
 
 ## Expected Outcome
 
-rescheduled=true; new event created before old deleted; row updated (Status="Rescheduled", new times, new Calendar Event ID); reschedule SMS sent; own old slot never blocked the check.
+rescheduled=true; new event created before old deleted; row updated (Status="Rescheduled", new times, new Calendar Event ID); reschedule SMS sent; own old slot never blocked the check. The new slot spans the appointment's stored Duration Minutes (V26.7) — a 5-hour job stays a 5-hour slot.
 
 ## Failure Conditions
 
