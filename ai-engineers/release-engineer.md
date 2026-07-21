@@ -21,7 +21,7 @@ Owns the final gate: turns validated changes into a shipped, versioned, document
 - [production/](../production/README.md) — current artifacts and the update-on-deploy rule
 - [OPERATIONS.md](../OPERATIONS.md) — deployment procedure, hazards, rollback
 - [CHANGELOG.md](../CHANGELOG.md) and [DECISIONS.md](../DECISIONS.md)
-- The QA verdict report and completed [regression-checklist.md](../tests/regression-checklist.md)
+- The QA verdict report per [qa/RELEASE_GATE.md](../qa/RELEASE_GATE.md) and completed [regression-checklist.md](../tests/regression-checklist.md)
 - [AI_ENGINEERING_RULES.md](../AI_ENGINEERING_RULES.md)
 
 ---

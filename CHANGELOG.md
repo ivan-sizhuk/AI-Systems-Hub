@@ -30,6 +30,8 @@
 
 ## Documentation (July 2026)
 
+- Added qa/: the QA Engineering Framework — validation workflow, test strategy, 16 conversation test suites with incident-derived probes, 7 regression categories, release gate with severity definitions, and standardized bug/failure/test report templates (with real-incident filled examples).
+
 - Documentation Audit performed; repository aligned to workflow V26.6 and prompt V27.
 - Added: docs/tools/ (nine tool contracts with data-access matrix), docs/integrations/ (six integrations plus OpenAI status note), production/ artifacts, OPERATIONS.md, CHANGELOG/DECISIONS/ROADMAP/TODO backfill, data-model/call-log.md.
 - Consistency sweep: corrected handoff escalation triggers, booking-conversation phone rule, appointment status example, Call_Log naming; recorded the configured LLM (Gemini 2.5 Flash) and confirmed no OpenAI usage anywhere.
