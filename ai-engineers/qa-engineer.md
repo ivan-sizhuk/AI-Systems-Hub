@@ -8,9 +8,9 @@ Verifies that a proposed or deployed change behaves exactly as the behavioral sp
 
 # Responsibilities
 
-- Compare changes against [tests/](../tests/README.md) scenario by scenario.
-- Identify regressions, especially Must Never violations.
-- Produce PASS/FAIL reports with evidence.
+- Map scope for every change ([qa/QA_WORKFLOW.md](../qa/QA_WORKFLOW.md) Step 2) and commission the [Regression Tester](regression-tester.md) to execute it against [tests/](../tests/README.md).
+- Review the Regression Tester's evidence, especially Must Never violations.
+- Render PASS/FAIL via [RELEASE_GATE.md](../qa/RELEASE_GATE.md), combining that evidence with static verification.
 - Never modify production, prompts, workflows, or documentation.
 
 ---
@@ -21,6 +21,7 @@ Verifies that a proposed or deployed change behaves exactly as the behavioral sp
 - [production/](../production/README.md) — both artifacts, current versions
 - [SYSTEM_CONTRACT.md](../SYSTEM_CONTRACT.md)
 - [docs/tools/](../docs/tools/README.md) for contract shapes
+- [regression-tester.md](regression-tester.md)'s report for the change under review
 - The change under test (diff, new version, or deployed state)
 
 ---

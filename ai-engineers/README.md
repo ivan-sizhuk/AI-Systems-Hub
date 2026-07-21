@@ -32,7 +32,9 @@ The roles are model-agnostic: any capable LLM (Claude, ChatGPT, Gemini, or a fut
 
 - [prompt-engineer.md](prompt-engineer.md) — conversation quality and prompt versions
 - [workflow-engineer.md](workflow-engineer.md) — n8n workflow changes
-- [qa-engineer.md](qa-engineer.md) — behavioral validation, PASS/FAIL verdicts
-- [architecture-reviewer.md](architecture-reviewer.md) — structural and consistency review
+- [code-reviewer.md](code-reviewer.md) — structural and convention review of a specific change, before regression testing
+- [regression-tester.md](regression-tester.md) — executes the regression suite; reports evidence to QA Engineer
+- [qa-engineer.md](qa-engineer.md) — scope mapping and PASS/FAIL verdicts against the Regression Tester's evidence
+- [architecture-reviewer.md](architecture-reviewer.md) — periodic, whole-repository structural and consistency review
 - [release-engineer.md](release-engineer.md) — versioning, artifacts, deployment readiness
 - [documentation-engineer.md](documentation-engineer.md) — documentation synchronization

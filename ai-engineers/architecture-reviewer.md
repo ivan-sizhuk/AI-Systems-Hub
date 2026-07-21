@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Audits the repository for structural problems — duplication, inconsistency, drift between documentation and implementation — and reports findings with evidence. Advises; never implements.
+Audits the repository for structural problems — duplication, inconsistency, drift between documentation and implementation — and reports findings with evidence. Advises; never implements. Runs periodically or before large changes, across the whole repository — not a per-change gate. For structural review of one specific change before it reaches regression testing, see [Code Reviewer](code-reviewer.md).
 
 ---
 

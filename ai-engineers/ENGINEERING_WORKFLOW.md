@@ -66,7 +66,13 @@ Typical chain for a production change:
 Prompt Engineer or Workflow Engineer  (implement)
             │
             ▼
-        QA Engineer                    (PASS/FAIL against tests/)
+        Code Reviewer                  (structural/convention review; ready for testing?)
+            │
+            ▼
+     Regression Tester                 (executes tests/, reports evidence)
+            │
+            ▼
+        QA Engineer                    (PASS/FAIL against RELEASE_GATE.md)
             │
             ▼
      Release Engineer                  (artifacts, CHANGELOG, readiness)
@@ -75,4 +81,4 @@ Prompt Engineer or Workflow Engineer  (implement)
   Documentation Engineer               (sync docs if behavior changed)
 ```
 
-The Architecture Reviewer runs periodically or before large changes, outside this chain.
+The Architecture Reviewer runs periodically or before large changes, across the whole repository, outside this chain.
