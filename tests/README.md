@@ -50,6 +50,12 @@ Every new feature adds its scenarios here in the same format (Scenario Name, Cus
 
 ---
 
+# QA Process
+
+This directory defines correct behavior; the operational validation process — scope mapping, probe calls, evidence capture, release gate — lives in [qa/](../qa/README.md).
+
+---
+
 # Related Documentation
 
 - [SYSTEM_CONTRACT.md](../SYSTEM_CONTRACT.md) — the non-negotiable rules every scenario enforces

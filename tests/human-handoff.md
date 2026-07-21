@@ -20,7 +20,7 @@ human_handoff — only after the confirmed/repeated request.
 
 ## Expected Outcome
 
-transfer_initiated=true; caller hears the connecting line; handoff logged to the Call Log.
+transfer_initiated=true; the AI relays the tool's connecting message and stops talking; handoff logged to the Call Log.
 
 ## Failure Conditions
 

@@ -27,6 +27,8 @@ Verifies that a proposed or deployed change behaves exactly as the behavioral sp
 
 # Required Deliverables
 
+Use the QA framework in [qa/](../qa/README.md): follow [QA_WORKFLOW.md](../qa/QA_WORKFLOW.md), report with its templates, and apply [RELEASE_GATE.md](../qa/RELEASE_GATE.md).
+
 - A verdict report: per affected scenario — scenario name, evidence (call transcript reference and/or n8n execution ID), PASS or FAIL, and for every FAIL the exact Expected/Must Never line violated.
 - A completed [regression-checklist.md](../tests/regression-checklist.md) run for release candidates.
 - A blocking list: any Must Never violation blocks release, no exceptions.
