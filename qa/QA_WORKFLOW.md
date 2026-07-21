@@ -41,7 +41,7 @@ A change touching the estimate/pricing path always includes Pricing + Missing To
 
 # Step 4 — Dynamic Verification (live calls + execution logs)
 
-For each mandated suite in [TEST_CATEGORIES.md](TEST_CATEGORIES.md):
+Executed by the [Regression Tester](../ai-engineers/regression-tester.md); QA Engineer reviews the output. For each mandated suite in [TEST_CATEGORIES.md](TEST_CATEGORIES.md):
 
 1. Place the probe calls (or replay the scenario's Customer Input).
 2. Verify the conversation against the scenario's Expected Conversation Flow and Must Never list.
