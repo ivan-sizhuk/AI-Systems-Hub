@@ -38,3 +38,4 @@ Every detection method traces to a real incident from this project's history (se
 - One Must Never violation anywhere in [tests/](../tests/README.md) is an automatic release FAIL.
 - The repository is the source of truth; AI memory is never relied upon ([ai-engineers/README.md](../ai-engineers/README.md)).
 - This framework is executed at Stage 7 of the [Engineering Task Lifecycle](../ENGINEERING_LIFECYCLE.md), on evidence produced at Stage 6. A FAIL verdict returns the task to Stage 4.
+- QA validates a change before release. Observing the live system after release is [production monitoring](../monitoring/README.md), which gates nothing and opens engineering tasks instead.
