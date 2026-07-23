@@ -58,9 +58,11 @@ The [Architecture Reviewer](ai-engineers/architecture-reviewer.md) runs outside 
 
 **Owner:** Engineering Manager
 
-**Entry:** any request — a reported defect, a feature request, a production incident, an Architecture Reviewer finding, or a [TODO.md](TODO.md) item being picked up.
+**Entry:** any request — a reported defect, a feature request, a production incident, an Architecture Reviewer finding, a [production monitoring](monitoring/README.md) finding, or a [TODO.md](TODO.md) item being picked up.
 
 **Actions:** record the request as received, without solving it. Identify its source and whether a production incident is ongoing.
+
+A finding arriving from [production monitoring](monitoring/README.md) already carries an operational severity, the breached metric, and its evidence. Carry that severity into Stage 1 rather than re-deriving it; monitoring reports what production did, and Stage 1 determines the change type and affected components from there.
 
 **Exit:** a task record exists containing the request verbatim, its source, and a one-line statement of what is being asked.
 
