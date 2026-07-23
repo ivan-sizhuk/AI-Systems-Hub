@@ -1,124 +1,75 @@
 diff --git a/ai-engineers/ENGINEERING_WORKFLOW.md b/ai-engineers/ENGINEERING_WORKFLOW.md
-index df37cd5..a8fee1b 100644
+index a8fee1b..76cfe6c 100644
 --- a/ai-engineers/ENGINEERING_WORKFLOW.md
 +++ b/ai-engineers/ENGINEERING_WORKFLOW.md
-@@ -66,7 +66,13 @@ Typical chain for a production change:
- Prompt Engineer or Workflow Engineer  (implement)
-             │
-             ▼
--        QA Engineer                    (PASS/FAIL against tests/)
-+        Code Reviewer                  (structural/convention review; ready for testing?)
-+            │
-+            ▼
-+     Regression Tester                 (executes tests/, reports evidence)
-+            │
-+            ▼
-+        QA Engineer                    (PASS/FAIL against RELEASE_GATE.md)
-             │
-             ▼
-      Release Engineer                  (artifacts, CHANGELOG, readiness)
-@@ -75,4 +81,4 @@ Prompt Engineer or Workflow Engineer  (implement)
-   Documentation Engineer               (sync docs if behavior changed)
- ```
+@@ -60,25 +60,6 @@ Versioned workflow JSON and/or prompt copied into [production/](../production/RE
  
--The Architecture Reviewer runs periodically or before large changes, outside this chain.
-+The Architecture Reviewer runs periodically or before large changes, across the whole repository, outside this chain.
+ # Role Handoffs
+ 
+-Typical chain for a production change:
+-
+-```
+-Prompt Engineer or Workflow Engineer  (implement)
+-            │
+-            ▼
+-        Code Reviewer                  (structural/convention review; ready for testing?)
+-            │
+-            ▼
+-     Regression Tester                 (executes tests/, reports evidence)
+-            │
+-            ▼
+-        QA Engineer                    (PASS/FAIL against RELEASE_GATE.md)
+-            │
+-            ▼
+-     Release Engineer                  (artifacts, CHANGELOG, readiness)
+-            │
+-            ▼
+-  Documentation Engineer               (sync docs if behavior changed)
+-```
+-
+-The Architecture Reviewer runs periodically or before large changes, across the whole repository, outside this chain.
++The eight steps above are what one engineer does inside a task. How a task moves *between* roles — stage gates, handoff artifacts, failure and rework paths — is defined in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md).
++
++Steps 1-4 of this document are executed at lifecycle Stage 3 (Planning); steps 5-7 at Stage 4 (Implementation); step 8 at Stage 8 (Release).
 diff --git a/ai-engineers/README.md b/ai-engineers/README.md
-index e281727..d36da16 100644
+index d36da16..1323db9 100644
 --- a/ai-engineers/README.md
 +++ b/ai-engineers/README.md
-@@ -32,7 +32,9 @@ The roles are model-agnostic: any capable LLM (Claude, ChatGPT, Gemini, or a fut
+@@ -10,11 +10,13 @@ The roles are model-agnostic: any capable LLM (Claude, ChatGPT, Gemini, or a fut
  
- - [prompt-engineer.md](prompt-engineer.md) — conversation quality and prompt versions
- - [workflow-engineer.md](workflow-engineer.md) — n8n workflow changes
--- [qa-engineer.md](qa-engineer.md) — behavioral validation, PASS/FAIL verdicts
--- [architecture-reviewer.md](architecture-reviewer.md) — structural and consistency review
-+- [code-reviewer.md](code-reviewer.md) — structural and convention review of a specific change, before regression testing
-+- [regression-tester.md](regression-tester.md) — executes the regression suite; reports evidence to QA Engineer
-+- [qa-engineer.md](qa-engineer.md) — scope mapping and PASS/FAIL verdicts against the Regression Tester's evidence
-+- [architecture-reviewer.md](architecture-reviewer.md) — periodic, whole-repository structural and consistency review
- - [release-engineer.md](release-engineer.md) — versioning, artifacts, deployment readiness
- - [documentation-engineer.md](documentation-engineer.md) — documentation synchronization
+ # How to Use These Roles
+ 
+-1. Pick the role that matches the task ([ROLE_SELECTION.md](ROLE_SELECTION.md)).
+-2. Read that role's Required Repository Inputs — completely, before any work.
+-3. Follow the standard lifecycle ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)).
+-4. Produce exactly the role's Required Deliverables.
+-5. Verify against the role's Review Checklist and the [regression checklist](../tests/regression-checklist.md) before calling the work complete.
++1. Locate the task's current stage in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md) — it names the role that owns the stage and the artifact required to enter it.
++2. Pick the role that matches the task ([ROLE_SELECTION.md](ROLE_SELECTION.md)).
++3. Read that role's Required Repository Inputs — completely, before any work.
++4. Follow the standard engineering steps ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)).
++5. Produce exactly the role's Required Deliverables.
++6. Verify against the role's Review Checklist and the [regression checklist](../tests/regression-checklist.md) before calling the work complete.
++7. Hand off the stage's artifact to the next stage ([ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md)).
+ 
+ ---
+ 
 diff --git a/ai-engineers/ROLE_SELECTION.md b/ai-engineers/ROLE_SELECTION.md
-index af549da..25f3ebe 100644
+index 25f3ebe..81edf34 100644
 --- a/ai-engineers/ROLE_SELECTION.md
 +++ b/ai-engineers/ROLE_SELECTION.md
-@@ -10,8 +10,10 @@ Which role to adopt for a given task.
- |---|---|
- | Change what the AI says, asks, or how it converses | [Prompt Engineer](prompt-engineer.md) |
- | Change tool logic, scheduling, matching, records, SMS | [Workflow Engineer](workflow-engineer.md) |
--| Verify a proposed or deployed change behaves correctly | [QA Engineer](qa-engineer.md) |
--| Audit structure, consistency, duplication, drift | [Architecture Reviewer](architecture-reviewer.md) |
-+| Review a specific implementation for standards, complexity, and duplication before testing | [Code Reviewer](code-reviewer.md) |
-+| Execute the regression suite against a change: simulate conversations, gather evidence | [Regression Tester](regression-tester.md) |
-+| Render the PASS/FAIL release verdict from that evidence | [QA Engineer](qa-engineer.md) |
-+| Audit the whole repository periodically for structure, consistency, duplication, drift | [Architecture Reviewer](architecture-reviewer.md) |
- | Ship a version: artifacts, changelog, deploy steps | [Release Engineer](release-engineer.md) |
- | Bring documentation in line with the implementation | [Documentation Engineer](documentation-engineer.md) |
- 
-@@ -21,6 +23,8 @@ Which role to adopt for a given task.
- 
- - The change alters spoken behavior but no tool contract → Prompt Engineer.
- - The change alters a tool's inputs, outputs, or side effects → Workflow Engineer (and the prompt follows only if the contract changed).
-+- Reviewing one specific change's structure and quality → Code Reviewer; auditing the whole repository on a periodic cadence → Architecture Reviewer. Same underlying concerns (duplication, consistency, drift), different scope and trigger.
-+- Running the suite and gathering evidence → Regression Tester; deciding PASS/FAIL from that evidence → QA Engineer. Regression Tester never gates; QA Engineer never re-runs what Regression Tester already executed.
- - Someone must decide PASS or FAIL → QA Engineer; QA never fixes what it finds.
- - The finding is "these two documents disagree" → Architecture Reviewer to identify, Documentation Engineer to fix.
- - Anything touching production/ or CHANGELOG at ship time → Release Engineer owns the final gate.
-@@ -29,4 +33,4 @@ Which role to adopt for a given task.
+@@ -33,4 +33,4 @@ Which role to adopt for a given task.
  
  # Multi-Role Tasks
  
--Most real changes chain roles ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)): implementer → QA → Release → Documentation. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.
-+Most real changes chain roles ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)): implementer → Code Reviewer → Regression Tester → QA Engineer → Release Engineer → Documentation Engineer. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.
-diff --git a/ai-engineers/architecture-reviewer.md b/ai-engineers/architecture-reviewer.md
-index dbeceec..e0487c0 100644
---- a/ai-engineers/architecture-reviewer.md
-+++ b/ai-engineers/architecture-reviewer.md
-@@ -2,7 +2,7 @@
- 
- ## Purpose
- 
--Audits the repository for structural problems — duplication, inconsistency, drift between documentation and implementation — and reports findings with evidence. Advises; never implements.
-+Audits the repository for structural problems — duplication, inconsistency, drift between documentation and implementation — and reports findings with evidence. Advises; never implements. Runs periodically or before large changes, across the whole repository — not a per-change gate. For structural review of one specific change before it reaches regression testing, see [Code Reviewer](code-reviewer.md).
- 
- ---
- 
-diff --git a/ai-engineers/qa-engineer.md b/ai-engineers/qa-engineer.md
-index 3c74dea..94c049a 100644
---- a/ai-engineers/qa-engineer.md
-+++ b/ai-engineers/qa-engineer.md
-@@ -8,9 +8,9 @@ Verifies that a proposed or deployed change behaves exactly as the behavioral sp
- 
- # Responsibilities
- 
--- Compare changes against [tests/](../tests/README.md) scenario by scenario.
--- Identify regressions, especially Must Never violations.
--- Produce PASS/FAIL reports with evidence.
-+- Map scope for every change ([qa/QA_WORKFLOW.md](../qa/QA_WORKFLOW.md) Step 2) and commission the [Regression Tester](regression-tester.md) to execute it against [tests/](../tests/README.md).
-+- Review the Regression Tester's evidence, especially Must Never violations.
-+- Render PASS/FAIL via [RELEASE_GATE.md](../qa/RELEASE_GATE.md), combining that evidence with static verification.
- - Never modify production, prompts, workflows, or documentation.
- 
- ---
-@@ -21,6 +21,7 @@ Verifies that a proposed or deployed change behaves exactly as the behavioral sp
- - [production/](../production/README.md) — both artifacts, current versions
- - [SYSTEM_CONTRACT.md](../SYSTEM_CONTRACT.md)
- - [docs/tools/](../docs/tools/README.md) for contract shapes
-+- [regression-tester.md](regression-tester.md)'s report for the change under review
- - The change under test (diff, new version, or deployed state)
- 
- ---
-diff --git a/qa/QA_WORKFLOW.md b/qa/QA_WORKFLOW.md
-index 9551a23..501ec4c 100644
---- a/qa/QA_WORKFLOW.md
-+++ b/qa/QA_WORKFLOW.md
-@@ -41,7 +41,7 @@ A change touching the estimate/pricing path always includes Pricing + Missing To
- 
- # Step 4 — Dynamic Verification (live calls + execution logs)
- 
--For each mandated suite in [TEST_CATEGORIES.md](TEST_CATEGORIES.md):
-+Executed by the [Regression Tester](../ai-engineers/regression-tester.md); QA Engineer reviews the output. For each mandated suite in [TEST_CATEGORIES.md](TEST_CATEGORIES.md):
- 
- 1. Place the probe calls (or replay the scenario's Customer Input).
- 2. Verify the conversation against the scenario's Expected Conversation Flow and Must Never list.
+-Most real changes chain roles ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)): implementer → Code Reviewer → Regression Tester → QA Engineer → Release Engineer → Documentation Engineer. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.
++Most real changes chain roles across the stages defined in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md): implementer → Code Reviewer → Regression Tester → QA Engineer → Release Engineer, with the Documentation Engineer syncing documentation inside the implementation stage. That document owns the stage gates, handoff artifacts, and failure paths. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.
+diff --git a/qa/README.md b/qa/README.md
+index 39f08bf..7c84b9e 100644
+--- a/qa/README.md
++++ b/qa/README.md
+@@ -37,3 +37,4 @@ Every detection method traces to a real incident from this project's history (se
+ - A verdict without evidence (a call transcript reference, an n8n execution ID, or artifact text) is not a verdict.
+ - One Must Never violation anywhere in [tests/](../tests/README.md) is an automatic release FAIL.
+ - The repository is the source of truth; AI memory is never relied upon ([ai-engineers/README.md](../ai-engineers/README.md)).
++- This framework is executed at Stage 7 of the [Engineering Task Lifecycle](../ENGINEERING_LIFECYCLE.md), on evidence produced at Stage 6. A FAIL verdict returns the task to Stage 4.
