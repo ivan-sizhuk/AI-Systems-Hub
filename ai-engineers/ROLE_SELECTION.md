@@ -33,4 +33,4 @@ Which role to adopt for a given task.
 
 # Multi-Role Tasks
 
-Most real changes chain roles ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)): implementer → Code Reviewer → Regression Tester → QA Engineer → Release Engineer → Documentation Engineer. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.
+Most real changes chain roles across the stages defined in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md): implementer → Code Reviewer → Regression Tester → QA Engineer → Release Engineer, with the Documentation Engineer syncing documentation inside the implementation stage. That document owns the stage gates, handoff artifacts, and failure paths. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.

@@ -10,11 +10,13 @@ The roles are model-agnostic: any capable LLM (Claude, ChatGPT, Gemini, or a fut
 
 # How to Use These Roles
 
-1. Pick the role that matches the task ([ROLE_SELECTION.md](ROLE_SELECTION.md)).
-2. Read that role's Required Repository Inputs — completely, before any work.
-3. Follow the standard lifecycle ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)).
-4. Produce exactly the role's Required Deliverables.
-5. Verify against the role's Review Checklist and the [regression checklist](../tests/regression-checklist.md) before calling the work complete.
+1. Locate the task's current stage in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md) — it names the role that owns the stage and the artifact required to enter it.
+2. Pick the role that matches the task ([ROLE_SELECTION.md](ROLE_SELECTION.md)).
+3. Read that role's Required Repository Inputs — completely, before any work.
+4. Follow the standard engineering steps ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)).
+5. Produce exactly the role's Required Deliverables.
+6. Verify against the role's Review Checklist and the [regression checklist](../tests/regression-checklist.md) before calling the work complete.
+7. Hand off the stage's artifact to the next stage ([ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md)).
 
 ---
 

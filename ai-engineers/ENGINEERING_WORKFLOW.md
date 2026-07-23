@@ -60,25 +60,6 @@ Versioned workflow JSON and/or prompt copied into [production/](../production/RE
 
 # Role Handoffs
 
-Typical chain for a production change:
+The eight steps above are what one engineer does inside a task. How a task moves *between* roles — stage gates, handoff artifacts, failure and rework paths — is defined in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md).
 
-```
-Prompt Engineer or Workflow Engineer  (implement)
-            │
-            ▼
-        Code Reviewer                  (structural/convention review; ready for testing?)
-            │
-            ▼
-     Regression Tester                 (executes tests/, reports evidence)
-            │
-            ▼
-        QA Engineer                    (PASS/FAIL against RELEASE_GATE.md)
-            │
-            ▼
-     Release Engineer                  (artifacts, CHANGELOG, readiness)
-            │
-            ▼
-  Documentation Engineer               (sync docs if behavior changed)
-```
-
-The Architecture Reviewer runs periodically or before large changes, across the whole repository, outside this chain.
+Steps 1-4 of this document are executed at lifecycle Stage 3 (Planning); steps 5-7 at Stage 4 (Implementation); step 8 at Stage 8 (Release).

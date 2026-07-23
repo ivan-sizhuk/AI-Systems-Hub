@@ -37,3 +37,4 @@ Every detection method traces to a real incident from this project's history (se
 - A verdict without evidence (a call transcript reference, an n8n execution ID, or artifact text) is not a verdict.
 - One Must Never violation anywhere in [tests/](../tests/README.md) is an automatic release FAIL.
 - The repository is the source of truth; AI memory is never relied upon ([ai-engineers/README.md](../ai-engineers/README.md)).
+- This framework is executed at Stage 7 of the [Engineering Task Lifecycle](../ENGINEERING_LIFECYCLE.md), on evidence produced at Stage 6. A FAIL verdict returns the task to Stage 4.
