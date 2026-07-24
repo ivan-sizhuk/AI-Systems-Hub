@@ -37,6 +37,18 @@ In (during the call): structured tool responses; the message field is the reply 
 
 Out (to n8n): tool calls with arguments per the [tool contracts](../tools/README.md); the post-call webhook containing the call summary (analysis data-collection field call_summary), conversation ID, and caller phone.
 
+Post-call analysis fields (Analysis tab data collection) consumed by [Call Record](../data-model/call-records.md) instrumentation:
+
+| Field | Status | Consumed as |
+|---|---|---|
+| call_summary | Configured | Appointment and Customer notes |
+| call_outcome | Not configured | Call Record Outcome (falls back to tool-derived) |
+| call_intent | Not configured | Call Record Intent |
+| customer_frustration | Not configured | Call Record Frustration |
+| tool_failures | Not configured | Call Record Tool Failures |
+
+Unconfigured fields are recorded as `not_configured` rather than blank. Configuring them is a console change, not a workflow change — the workflow already reads them if present.
+
 Ownership: conversation state lives here for the duration of the call and is never persisted; see [conversations.md](../data-model/conversations.md).
 
 ---

@@ -46,6 +46,7 @@ Every new feature adds its scenarios here in the same format (Scenario Name, Cus
 - [human-handoff.md](human-handoff.md) — transfers and consent
 - [edge-cases.md](edge-cases.md) — recovery, silence, corrections, limitations
 - [tool-behavior.md](tool-behavior.md) — per-tool expected behavior
+- [instrumentation.md](instrumentation.md) — per-call Call Record behavior (backend only; no customer-facing surface)
 - [regression-checklist.md](regression-checklist.md) — release checklist
 
 ---

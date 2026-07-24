@@ -34,6 +34,7 @@ The Post-Call Processing workflow is responsible for:
 - Finalizing the conversation
 - Saving the conversation summary to the appointment record (update-only, matched by caller phone)
 - Saving a timestamped conversation summary to the customer record
+- Writing one structured [Call Record](../data-model/call-records.md) per conversation (added V27.0)
 - Preparing the system for future interactions
 
 Session cleanup is not performed here; it runs on the scheduled reminder cycle.
@@ -116,6 +117,16 @@ Only permanent business records should remain.
 ## Logging Rules
 
 Important workflow events should be recorded for troubleshooting and future analysis.
+
+---
+
+## Call Record Rules
+
+One [Call Record](../data-model/call-records.md) row is appended per completed conversation, after note writing, whether or not the call booked anything.
+
+Fields that cannot be determined are written as sentinels (`unknown`, `not_configured`) and never left blank — a blank is indistinguishable from a zero, and every operational rate is calculated from these rows.
+
+Call Record writing must never affect note writing. Both the record-building and the append step continue on error, so an instrumentation failure loses that row and nothing else.
 
 ---
 

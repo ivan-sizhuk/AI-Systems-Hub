@@ -12,6 +12,18 @@
 - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
 - Size: 334 → 322 lines with duplication removed.
 
+## Workflow V27.0 (release candidate — NOT DEPLOYED)
+
+- Feature: per-call instrumentation. Post-call processing now appends one structured Call Record row per completed conversation to a new Call_Records sheet tab (docs/data-model/call-records.md), supplying the per-call structure the Production Monitoring Framework required and did not have.
+- Thirteen columns: Timestamp, Conversation ID, Call SID, Caller Phone, Duration Secs, Outcome, Intent, Tools Fired, Tool Failures, Frustration, Call Successful, Schema Version, Payload Shape. Deliberately excludes anything already stored elsewhere (summary text, customer/vehicle/service, appointment details, handoff reason) — the record stores what the call did, not what it collected.
+- Payload Shape is a temporary diagnostic recording the structure (key names, types, array lengths — never customer content) of each received webhook payload. Three reads are undocumented upstream (metadata.call_duration_secs, analysis.call_successful, data.transcript); rather than guessing them, the workflow reports what actually arrived so extraction can be confirmed from live executions. Removable as schema v2 once confirmed.
+- All values are sheet-safe: newlines and tabs stripped, length-capped, every column always populated.
+- Two nodes added (Build Call Record, Append Call Record), spliced after Update Customer Notes and before Respond to ElevenLabs. Zero existing nodes modified; no tool schema, prompt, or customer-facing behavior changed.
+- Resilience: both new nodes continue on error, matching the existing post-call chain. The parser degrades every field to a sentinel (unknown / not_configured) rather than throwing, so a malformed or restructured payload loses one row and never blocks note writing or the webhook response.
+- Backwards compatible: Outcome derives from tools fired when the platform's call_outcome field is unconfigured, so the record carries signal before any ElevenLabs console change. Intent, Frustration, and Tool Failures record not_configured until their Analysis-tab fields are added.
+- Requires the Call_Records tab in the spreadsheet with the thirteen column headers before deployment.
+- Status: Stage 4 (Implementation) of ENGINEERING_LIFECYCLE.md. Code review, regression testing, and the QA gate have not been performed. Not deployed; production remains V26.9.
+
 ## Workflow V26.9 (current production)
 
 - Bugfix: booking a full-day request could create an event spanning the whole business day (9:00-17:00) while correctly resolving the duration. Cause: get_availability returns null confirmed times for day-level requests, but also echoes the searched window (startTime/endTime); the model passed the window echo as confirmedStartTime/EndTime, and the booking guard trusted the received end wholesale. Fix: duration-integrity guard in booking (Code2) and rescheduling (Code4) — a confirmed pair that does not span exactly estimatedMinutes has its end recomputed from the duration. Legitimate confirmed pairs are untouched by construction. No prompt or schema changes.
