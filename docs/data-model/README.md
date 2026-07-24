@@ -129,6 +129,18 @@ call-log.md
 
 ---
 
+## Call Record
+
+Records one structured row per completed conversation, for operational monitoring.
+
+Documented in:
+
+```
+call-records.md
+```
+
+---
+
 # Relationships
 
 ```

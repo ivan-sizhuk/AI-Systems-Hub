@@ -19,6 +19,7 @@ Every metric traces to one of these. Nothing else is available.
 | **Google Calendar** | Event start, end, summary | Authoritative for scheduling; span is comparable against Estimated Duration |
 | **Customers sheet** | Customer records, timestamped conversation summaries | Summary text comes from the voice platform's post-call webhook |
 | **Call_Log sheet** | Handoff initiated, handoff missed | **Handoff events only.** End-of-call, bookings, and cancellations are not logged here ([call-log.md](../docs/data-model/call-log.md)) |
+| **Call_Records sheet** | One structured row per completed conversation: outcome, intent, duration, tools fired, frustration | Added by workflow V27.0 ([call-records.md](../docs/data-model/call-records.md)). The denominator for every per-call rate. Its Payload Shape column is a temporary diagnostic, not a metric — never report on it |
 | **ElevenLabs conversation history** | Transcripts, tool calls, call duration | Retained by the platform, not by this repository |
 | **Twilio** | Call records, duration, SMS delivery status | Delivery failures are visible here only |
 
@@ -59,6 +60,8 @@ Duration integrity is the check for the incident class that produced the v26.8 s
 | Missed handoffs | Call_Log (handoff missed) | Any occurrence → warning; 3+ in 24h → finding |
 | Average call duration | Twilio / ElevenLabs call records | Sustained shift beyond ±40% of the trailing 30-day mean → finding |
 | Repeat callers | Customers sheet — same phone across multiple calls within 48h with no booking | Rising trend over 7 days → finding |
+| Conversation abandonment rate | Call_Records — `Outcome` of `info_only` or `unknown` with a short `Duration Secs` | > 15% over 7 days → finding |
+| Total call volume | Call_Records row count | The denominator for every per-call rate above |
 
 Repeat calls without a booking are the closest available proxy for an unsuccessful conversation. It is a proxy, not a measurement — a caller may have legitimate repeat business.
 
@@ -77,19 +80,22 @@ The status vocabulary is matched by workflow code; [OPERATIONS.md](../OPERATIONS
 
 # Instrumentation Gaps
 
-These are worth monitoring and **cannot be measured today**. Each requires production logging that does not currently exist. Closing a gap is engineering work and goes through the [lifecycle](../ENGINEERING_LIFECYCLE.md) like any other change — it is not performed by this framework.
+Workflow V27.0 added the [Call Record](../docs/data-model/call-records.md), which supplies the per-call structure these metrics need. Availability is now in two parts: the **field exists** in every row, and the **field is populated** only where its source is configured.
 
-| Desired metric | Why it is not measurable | What would be required |
+| Desired metric | Field | Status |
 |---|---|---|
-| Customer frustration | No sentiment or tone data is captured or stored | Sentiment scoring over the post-call transcript, persisted per call |
-| AI misunderstanding intent | Intent is never classified or logged; it lives only inside the agent during the call | Per-call intent capture written to a durable record |
-| Hallucinations | Detectable only by comparing transcript claims against the catalog and business config | Automated transcript review, or a sampled manual review cadence |
-| Missing tool calls | Requires comparing what the transcript implies against what tools actually fired | Expected-tool-usage inference over transcripts |
-| Conversation abandonment | No per-call outcome marker exists; a call that ends without booking is indistinguishable from an information-only call | An outcome field written by post-call processing for every call |
+| Conversation abandonment | `Outcome` | **Measurable.** Derived from tools fired when the platform field is unconfigured |
+| Missing tool calls | `Tools Fired` | **Measurable** where the platform payload carries transcript tool calls; `unknown` otherwise |
+| AI misunderstanding intent | `Intent` | **Pending console config.** Reads `call_intent` from the Analysis tab; `not_configured` until set |
+| Customer frustration | `Frustration` | **Pending console config.** Reads `customer_frustration`; `not_configured` until set |
+| Hallucinations | — | **Still not measurable.** No field can capture this; `Conversation ID` makes the transcript retrievable for review |
 
-The common root cause: **post-call processing writes a conversation summary but no structured per-call outcome record.** A single durable per-call record — outcome, intent, tools fired, resolution — would close four of these five gaps at once. That is the highest-leverage instrumentation work available, and it is recorded in [TODO.md](../TODO.md).
+Two consequences for reporting:
 
-Until then, hallucinations and missing tool calls are covered by **sampled manual review** ([MONITORING_WORKFLOW.md](MONITORING_WORKFLOW.md) Step 3), not by measurement.
+- A metric whose field reads `not_configured` across all rows is **not instrumented**, not healthy. Never compute a rate over `not_configured` rows.
+- Enabling `call_intent`, `customer_frustration`, and `tool_failures` in the ElevenLabs Analysis tab ([elevenlabs.md](../docs/integrations/elevenlabs.md)) is a console change requiring no workflow change — the workflow already reads them.
+
+Hallucination detection remains **sampled manual review** ([MONITORING_WORKFLOW.md](MONITORING_WORKFLOW.md) Step 3).
 
 ---
 
