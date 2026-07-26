@@ -22,6 +22,9 @@
 
 ## Known hazards
 
+**Webhook response mode vs. Respond node.** If a webhook node uses responseMode 'lastNode' ("When Last Node Finishes") while the same workflow also contains a 'Respond to Webhook' node, n8n refuses to run the workflow: WorkflowConfigurationError, "Unused Respond to Webhook node found". The workflow fails before executing, so nothing downstream runs and the caller sees no error. Fix: set the webhook's response mode to 'responseNode' ("Using Respond to Webhook Node"). A workflow containing a respondToWebhook node should always use 'responseNode', never 'lastNode'. (Surfaced by the V27.0 instrumentation splice; fixed in V27.1.)
+
+
 - Google OAuth apps in Testing mode expire refresh tokens every 7 days; publish the OAuth consent screen to Production. Sheets nodes are configured to continue on error, so a dead credential degrades silently.
 - Google Sheets CSV export (gviz) can serve stale data; trust the n8n node read over the export URL.
 - Status strings (Booked, Rescheduled, Cancelled, Rebooked) are matched by workflow code; renaming them in the sheet breaks reminders, cancellation, and rescheduling.
