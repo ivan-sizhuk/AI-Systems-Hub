@@ -1,75 +1,75 @@
-diff --git a/ai-engineers/ENGINEERING_WORKFLOW.md b/ai-engineers/ENGINEERING_WORKFLOW.md
-index a8fee1b..76cfe6c 100644
---- a/ai-engineers/ENGINEERING_WORKFLOW.md
-+++ b/ai-engineers/ENGINEERING_WORKFLOW.md
-@@ -60,25 +60,6 @@ Versioned workflow JSON and/or prompt copied into [production/](../production/RE
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9de8407..031a699 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -12,6 +12,14 @@
+ - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
+ - Size: 334 → 322 lines with duplication removed.
  
- # Role Handoffs
- 
--Typical chain for a production change:
--
--```
--Prompt Engineer or Workflow Engineer  (implement)
--            │
--            ▼
--        Code Reviewer                  (structural/convention review; ready for testing?)
--            │
--            ▼
--     Regression Tester                 (executes tests/, reports evidence)
--            │
--            ▼
--        QA Engineer                    (PASS/FAIL against RELEASE_GATE.md)
--            │
--            ▼
--     Release Engineer                  (artifacts, CHANGELOG, readiness)
--            │
--            ▼
--  Documentation Engineer               (sync docs if behavior changed)
--```
--
--The Architecture Reviewer runs periodically or before large changes, across the whole repository, outside this chain.
-+The eight steps above are what one engineer does inside a task. How a task moves *between* roles — stage gates, handoff artifacts, failure and rework paths — is defined in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md).
++## Workflow V27.1 (release candidate — NOT DEPLOYED)
 +
-+Steps 1-4 of this document are executed at lifecycle Stage 3 (Planning); steps 5-7 at Stage 4 (Implementation); step 8 at Stage 8 (Release).
-diff --git a/ai-engineers/README.md b/ai-engineers/README.md
-index d36da16..1323db9 100644
---- a/ai-engineers/README.md
-+++ b/ai-engineers/README.md
-@@ -10,11 +10,13 @@ The roles are model-agnostic: any capable LLM (Claude, ChatGPT, Gemini, or a fut
++- Fix: post-call webhook never executed on a real call. The ElevenLabs Post Call Webhook node used responseMode 'lastNode' while the workflow also contains a dedicated 'Respond to ElevenLabs' (respondToWebhook) node. n8n rejects this combination with WorkflowConfigurationError: "Unused Respond to Webhook node found in the workflow", and refuses to run the workflow at all — so notes were not written and no Call Record was appended.
++- Root cause: pre-existing latent misconfiguration. In V26.9 the Respond node was the terminal node, which masked the conflict under 'lastNode' mode. The V27.0 instrumentation splice (two nodes added before the Respond node) changed the graph enough for n8n's validator to surface the error. The mismatched response mode was always present; V27.0 exposed it.
++- Change: ElevenLabs Post Call Webhook responseMode 'lastNode' -> 'responseNode', so the existing 'Respond to ElevenLabs' node is the explicit responder (HTTP 200). One field on one node; no node added or removed; all connections identical to V27.0.
++- Impact: none to customer-facing behavior. The post-call webhook is backend-only. This is the fix that makes the entire post-call chain (note updates + Call Record instrumentation) actually execute.
++- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Discovered during first live validation of V27.0. Supersedes V27.0 as the current release candidate; V27.0 must not be deployed (it cannot execute).
++
+ ## Workflow V27.0 (release candidate — NOT DEPLOYED)
  
- # How to Use These Roles
+ - Feature: per-call instrumentation. Post-call processing now appends one structured Call Record row per completed conversation to a new Call_Records sheet tab (docs/data-model/call-records.md), supplying the per-call structure the Production Monitoring Framework required and did not have.
+diff --git a/OPERATIONS.md b/OPERATIONS.md
+index 3d31e72..9025455 100644
+--- a/OPERATIONS.md
++++ b/OPERATIONS.md
+@@ -22,6 +22,9 @@
  
--1. Pick the role that matches the task ([ROLE_SELECTION.md](ROLE_SELECTION.md)).
--2. Read that role's Required Repository Inputs — completely, before any work.
--3. Follow the standard lifecycle ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)).
--4. Produce exactly the role's Required Deliverables.
--5. Verify against the role's Review Checklist and the [regression checklist](../tests/regression-checklist.md) before calling the work complete.
-+1. Locate the task's current stage in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md) — it names the role that owns the stage and the artifact required to enter it.
-+2. Pick the role that matches the task ([ROLE_SELECTION.md](ROLE_SELECTION.md)).
-+3. Read that role's Required Repository Inputs — completely, before any work.
-+4. Follow the standard engineering steps ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)).
-+5. Produce exactly the role's Required Deliverables.
-+6. Verify against the role's Review Checklist and the [regression checklist](../tests/regression-checklist.md) before calling the work complete.
-+7. Hand off the stage's artifact to the next stage ([ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md)).
+ ## Known hazards
  
- ---
++**Webhook response mode vs. Respond node.** If a webhook node uses responseMode 'lastNode' ("When Last Node Finishes") while the same workflow also contains a 'Respond to Webhook' node, n8n refuses to run the workflow: WorkflowConfigurationError, "Unused Respond to Webhook node found". The workflow fails before executing, so nothing downstream runs and the caller sees no error. Fix: set the webhook's response mode to 'responseNode' ("Using Respond to Webhook Node"). A workflow containing a respondToWebhook node should always use 'responseNode', never 'lastNode'. (Surfaced by the V27.0 instrumentation splice; fixed in V27.1.)
++
++
+ - Google OAuth apps in Testing mode expire refresh tokens every 7 days; publish the OAuth consent screen to Production. Sheets nodes are configured to continue on error, so a dead credential degrades silently.
+ - Google Sheets CSV export (gviz) can serve stale data; trust the n8n node read over the export URL.
+ - Status strings (Booked, Rescheduled, Cancelled, Rebooked) are matched by workflow code; renaming them in the sheet breaks reminders, cancellation, and rescheduling.
+diff --git a/TODO.md b/TODO.md
+index ae17bb7..a83e554 100644
+--- a/TODO.md
++++ b/TODO.md
+@@ -15,3 +15,4 @@ Instrumentation gaps identified by the Production Monitoring Framework (monitori
+ - Call_Records duplicate rows — the append is unconditional, so a retried post-call webhook writes a second row for the same Conversation ID. Duplicates are detectable and removable by Conversation ID at analysis time. Decide whether deduplication is worth the added read and failure mode.
+ - Call_Records retention — one row per call, unbounded. Decide a retention or archival policy before the sheet approaches Google Sheets cell limits.
+ - Hallucination detection — covered by sampled manual transcript review until automated checking exists.
++- Add ElevenLabs-Signature HMAC verification to the post-call webhook node. The workspace post-call webhook is configured with HMAC auth (a signing secret is generated), but the n8n webhook node does not currently verify the signature — any party with the URL could POST to it. Source the secret from n8n credentials, not the workflow JSON.
+diff --git a/production/README.md b/production/README.md
+index 304a6c6..abe0360 100644
+--- a/production/README.md
++++ b/production/README.md
+@@ -17,6 +17,7 @@ Rule: update these files on every deploy, in the same change as the CHANGELOG en
  
-diff --git a/ai-engineers/ROLE_SELECTION.md b/ai-engineers/ROLE_SELECTION.md
-index 25f3ebe..81edf34 100644
---- a/ai-engineers/ROLE_SELECTION.md
-+++ b/ai-engineers/ROLE_SELECTION.md
-@@ -33,4 +33,4 @@ Which role to adopt for a given task.
+ # Release Candidates — not deployed
  
- # Multi-Role Tasks
+-- workflow-v27.0.json — per-call Call Record instrumentation. Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.1.json — per-call Call Record instrumentation, with the post-call webhook response-mode fix (supersedes v27.0). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.0.json — superseded. Do not deploy: its post-call webhook cannot execute (responseMode conflict, fixed in v27.1).
  
--Most real changes chain roles ([ENGINEERING_WORKFLOW.md](ENGINEERING_WORKFLOW.md)): implementer → Code Reviewer → Regression Tester → QA Engineer → Release Engineer → Documentation Engineer. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.
-+Most real changes chain roles across the stages defined in [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md): implementer → Code Reviewer → Regression Tester → QA Engineer → Release Engineer, with the Documentation Engineer syncing documentation inside the implementation stage. That document owns the stage gates, handoff artifacts, and failure paths. One engineer (or one session) may hold several roles sequentially, but each role's deliverables and checklists still apply separately — holding two roles never waives either checklist.
-diff --git a/qa/README.md b/qa/README.md
-index 39f08bf..7c84b9e 100644
---- a/qa/README.md
-+++ b/qa/README.md
-@@ -37,3 +37,4 @@ Every detection method traces to a real incident from this project's history (se
- - A verdict without evidence (a call transcript reference, an n8n execution ID, or artifact text) is not a verdict.
- - One Must Never violation anywhere in [tests/](../tests/README.md) is an automatic release FAIL.
- - The repository is the source of truth; AI memory is never relied upon ([ai-engineers/README.md](../ai-engineers/README.md)).
-+- This framework is executed at Stage 7 of the [Engineering Task Lifecycle](../ENGINEERING_LIFECYCLE.md), on evidence produced at Stage 6. A FAIL verdict returns the task to Stage 4.
+ A candidate becomes production only after a QA PASS, when the Release Engineer deploys it per [OPERATIONS.md](../OPERATIONS.md) and moves it into the list above.
+diff --git a/tests/instrumentation.md b/tests/instrumentation.md
+index 37fd9e4..2026b56 100644
+--- a/tests/instrumentation.md
++++ b/tests/instrumentation.md
+@@ -140,3 +140,15 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` →
+ **Expected:** two rows sharing one `Conversation ID`. This is a **known limitation**, not a defect — the append is unconditional by design, and duplicates are removable by `Conversation ID` at analysis time.
+ 
+ **Must Never:** count duplicate rows toward call volume or any rate without de-duplicating on `Conversation ID` first. Total call count is the denominator for most operational metrics, so an undetected duplicate deflates every rate computed from it.
++
++---
++
++# I-13 — The workflow actually executes (webhook response mode)
++
++**Setup:** a real post-call webhook delivery reaches the production endpoint.
++
++**Expected:** the workflow runs to completion and returns HTTP 200 via the `Respond to ElevenLabs` node.
++
++**Must Never:**
++- Fail with `WorkflowConfigurationError: Unused Respond to Webhook node found`. This occurs when the webhook's response mode is `lastNode` while a `respondToWebhook` node is present — the workflow refuses to execute and nothing downstream runs, including note updates and the Call Record. The webhook must use response mode `responseNode` ([OPERATIONS.md](../OPERATIONS.md) known hazards).
++- Leave the caller's post-call processing silently skipped because the workflow never started.

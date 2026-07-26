@@ -15,3 +15,4 @@ Instrumentation gaps identified by the Production Monitoring Framework (monitori
 - Call_Records duplicate rows — the append is unconditional, so a retried post-call webhook writes a second row for the same Conversation ID. Duplicates are detectable and removable by Conversation ID at analysis time. Decide whether deduplication is worth the added read and failure mode.
 - Call_Records retention — one row per call, unbounded. Decide a retention or archival policy before the sheet approaches Google Sheets cell limits.
 - Hallucination detection — covered by sampled manual transcript review until automated checking exists.
+- Add ElevenLabs-Signature HMAC verification to the post-call webhook node. The workspace post-call webhook is configured with HMAC auth (a signing secret is generated), but the n8n webhook node does not currently verify the signature — any party with the URL could POST to it. Source the secret from n8n credentials, not the workflow JSON.

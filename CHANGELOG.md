@@ -12,6 +12,14 @@
 - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
 - Size: 334 → 322 lines with duplication removed.
 
+## Workflow V27.1 (release candidate — NOT DEPLOYED)
+
+- Fix: post-call webhook never executed on a real call. The ElevenLabs Post Call Webhook node used responseMode 'lastNode' while the workflow also contains a dedicated 'Respond to ElevenLabs' (respondToWebhook) node. n8n rejects this combination with WorkflowConfigurationError: "Unused Respond to Webhook node found in the workflow", and refuses to run the workflow at all — so notes were not written and no Call Record was appended.
+- Root cause: pre-existing latent misconfiguration. In V26.9 the Respond node was the terminal node, which masked the conflict under 'lastNode' mode. The V27.0 instrumentation splice (two nodes added before the Respond node) changed the graph enough for n8n's validator to surface the error. The mismatched response mode was always present; V27.0 exposed it.
+- Change: ElevenLabs Post Call Webhook responseMode 'lastNode' -> 'responseNode', so the existing 'Respond to ElevenLabs' node is the explicit responder (HTTP 200). One field on one node; no node added or removed; all connections identical to V27.0.
+- Impact: none to customer-facing behavior. The post-call webhook is backend-only. This is the fix that makes the entire post-call chain (note updates + Call Record instrumentation) actually execute.
+- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Discovered during first live validation of V27.0. Supersedes V27.0 as the current release candidate; V27.0 must not be deployed (it cannot execute).
+
 ## Workflow V27.0 (release candidate — NOT DEPLOYED)
 
 - Feature: per-call instrumentation. Post-call processing now appends one structured Call Record row per completed conversation to a new Call_Records sheet tab (docs/data-model/call-records.md), supplying the per-call structure the Production Monitoring Framework required and did not have.

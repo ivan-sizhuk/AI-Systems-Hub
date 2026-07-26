@@ -140,3 +140,15 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` → 
 **Expected:** two rows sharing one `Conversation ID`. This is a **known limitation**, not a defect — the append is unconditional by design, and duplicates are removable by `Conversation ID` at analysis time.
 
 **Must Never:** count duplicate rows toward call volume or any rate without de-duplicating on `Conversation ID` first. Total call count is the denominator for most operational metrics, so an undetected duplicate deflates every rate computed from it.
+
+---
+
+# I-13 — The workflow actually executes (webhook response mode)
+
+**Setup:** a real post-call webhook delivery reaches the production endpoint.
+
+**Expected:** the workflow runs to completion and returns HTTP 200 via the `Respond to ElevenLabs` node.
+
+**Must Never:**
+- Fail with `WorkflowConfigurationError: Unused Respond to Webhook node found`. This occurs when the webhook's response mode is `lastNode` while a `respondToWebhook` node is present — the workflow refuses to execute and nothing downstream runs, including note updates and the Call Record. The webhook must use response mode `responseNode` ([OPERATIONS.md](../OPERATIONS.md) known hazards).
+- Leave the caller's post-call processing silently skipped because the workflow never started.
