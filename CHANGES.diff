@@ -1,75 +1,82 @@
 diff --git a/CHANGELOG.md b/CHANGELOG.md
-index 9de8407..031a699 100644
+index 12de657..395d9ab 100644
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -12,6 +12,14 @@
+@@ -12,6 +12,16 @@
  - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
  - Size: 334 → 322 lines with duplication removed.
  
-+## Workflow V27.1 (release candidate — NOT DEPLOYED)
++## Workflow V27.3 (release candidate — NOT DEPLOYED)
 +
-+- Fix: post-call webhook never executed on a real call. The ElevenLabs Post Call Webhook node used responseMode 'lastNode' while the workflow also contains a dedicated 'Respond to ElevenLabs' (respondToWebhook) node. n8n rejects this combination with WorkflowConfigurationError: "Unused Respond to Webhook node found in the workflow", and refuses to run the workflow at all — so notes were not written and no Call Record was appended.
-+- Root cause: pre-existing latent misconfiguration. In V26.9 the Respond node was the terminal node, which masked the conflict under 'lastNode' mode. The V27.0 instrumentation splice (two nodes added before the Respond node) changed the graph enough for n8n's validator to surface the error. The mismatched response mode was always present; V27.0 exposed it.
-+- Change: ElevenLabs Post Call Webhook responseMode 'lastNode' -> 'responseNode', so the existing 'Respond to ElevenLabs' node is the explicit responder (HTTP 200). One field on one node; no node added or removed; all connections identical to V27.0.
-+- Impact: none to customer-facing behavior. The post-call webhook is backend-only. This is the fix that makes the entire post-call chain (note updates + Call Record instrumentation) actually execute.
-+- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Discovered during first live validation of V27.0. Supersedes V27.0 as the current release candidate; V27.0 must not be deployed (it cannot execute).
++- Fix (BUG-002): Call_Records rows were created but most fields read unknown/not_configured. The Payload Shape diagnostic revealed the cause: data:[conversationId,callerPhone,notesText,timestamp] with metadata/analysis/collected/dynvars empty and transcript absent — i.e. Build Call Record was reading the output of Parse Post Call Data, not the raw ElevenLabs webhook.
++- Root cause: introduced by V27.2 Fix 3. Decoupling moved Build Call Record onto an independent branch driven from Parse Post Call Data, so $json became the parser's output rather than the webhook body. The architecture was correct; the payload source was wrong.
++- Change: Build Call Record now reads the payload via an ABSOLUTE reference — $('ElevenLabs Post Call Webhook').first().json — with a graceful fallback to $json if that reference is ever unavailable. This restores metadata/analysis/transcript without re-coupling to the notes chain: the branch structure from V27.2 is unchanged.
++- Also added a Call SID fallback to workflow static data ($getWorkflowStaticData('global').call_sid), which 'Save Call SID to Static Data' persists during the call, for cases where the post-call payload omits it.
++- Scope: exactly 1 node changed (Build Call Record). Connections identical to V27.2. No booking, scheduling, calendar, reminder-SMS, prompt, or customer-facing node touched. Monitoring schema unchanged (13 columns). Payload Shape retained for one validation cycle.
++- Verified against the exact failing condition: with the real payload reachable, Duration Secs, Tools Fired, and Outcome populate; Call SID falls back to static data when absent; the node degrades gracefully (13 columns, no throw) if the webhook reference returns nothing.
++- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.2. Code review, regression, and QA gate outstanding.
 +
- ## Workflow V27.0 (release candidate — NOT DEPLOYED)
+ ## Workflow V27.2 (release candidate — NOT DEPLOYED)
  
- - Feature: per-call instrumentation. Post-call processing now appends one structured Call Record row per completed conversation to a new Call_Records sheet tab (docs/data-model/call-records.md), supplying the per-call structure the Production Monitoring Framework required and did not have.
-diff --git a/OPERATIONS.md b/OPERATIONS.md
-index 3d31e72..9025455 100644
---- a/OPERATIONS.md
-+++ b/OPERATIONS.md
-@@ -22,6 +22,9 @@
+ - Fix (BUG-001): the post-call workflow halted before Call_Records were written. Three coordinated fixes.
+diff --git a/docs/data-model/call-records.md b/docs/data-model/call-records.md
+index 564a7b3..81866a0 100644
+--- a/docs/data-model/call-records.md
++++ b/docs/data-model/call-records.md
+@@ -67,6 +67,12 @@ Each degrades to `unknown` when absent. None is invented: if the field is not th
  
- ## Known hazards
+ ---
  
-+**Webhook response mode vs. Respond node.** If a webhook node uses responseMode 'lastNode' ("When Last Node Finishes") while the same workflow also contains a 'Respond to Webhook' node, n8n refuses to run the workflow: WorkflowConfigurationError, "Unused Respond to Webhook node found". The workflow fails before executing, so nothing downstream runs and the caller sees no error. Fix: set the webhook's response mode to 'responseNode' ("Using Respond to Webhook Node"). A workflow containing a respondToWebhook node should always use 'responseNode', never 'lastNode'. (Surfaced by the V27.0 instrumentation splice; fixed in V27.1.)
++# Payload Source
 +
-+
- - Google OAuth apps in Testing mode expire refresh tokens every 7 days; publish the OAuth consent screen to Production. Sheets nodes are configured to continue on error, so a dead credential degrades silently.
- - Google Sheets CSV export (gviz) can serve stale data; trust the n8n node read over the export URL.
- - Status strings (Booked, Rescheduled, Cancelled, Rebooked) are matched by workflow code; renaming them in the sheet breaks reminders, cancellation, and rescheduling.
-diff --git a/TODO.md b/TODO.md
-index ae17bb7..a83e554 100644
---- a/TODO.md
-+++ b/TODO.md
-@@ -15,3 +15,4 @@ Instrumentation gaps identified by the Production Monitoring Framework (monitori
- - Call_Records duplicate rows — the append is unconditional, so a retried post-call webhook writes a second row for the same Conversation ID. Duplicates are detectable and removable by Conversation ID at analysis time. Decide whether deduplication is worth the added read and failure mode.
- - Call_Records retention — one row per call, unbounded. Decide a retention or archival policy before the sheet approaches Google Sheets cell limits.
- - Hallucination detection — covered by sampled manual transcript review until automated checking exists.
-+- Add ElevenLabs-Signature HMAC verification to the post-call webhook node. The workspace post-call webhook is configured with HMAC auth (a signing secret is generated), but the n8n webhook node does not currently verify the signature — any party with the URL could POST to it. Source the secret from n8n credentials, not the workflow JSON.
-diff --git a/production/README.md b/production/README.md
-index 304a6c6..abe0360 100644
---- a/production/README.md
-+++ b/production/README.md
-@@ -17,6 +17,7 @@ Rule: update these files on every deploy, in the same change as the CHANGELOG en
- 
- # Release Candidates — not deployed
- 
--- workflow-v27.0.json — per-call Call Record instrumentation. Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
-+- workflow-v27.1.json — per-call Call Record instrumentation, with the post-call webhook response-mode fix (supersedes v27.0). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
-+- workflow-v27.0.json — superseded. Do not deploy: its post-call webhook cannot execute (responseMode conflict, fixed in v27.1).
- 
- A candidate becomes production only after a QA PASS, when the Release Engineer deploys it per [OPERATIONS.md](../OPERATIONS.md) and moves it into the list above.
-diff --git a/tests/instrumentation.md b/tests/instrumentation.md
-index 37fd9e4..2026b56 100644
---- a/tests/instrumentation.md
-+++ b/tests/instrumentation.md
-@@ -140,3 +140,15 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` →
- **Expected:** two rows sharing one `Conversation ID`. This is a **known limitation**, not a defect — the append is unconditional by design, and duplicates are removable by `Conversation ID` at analysis time.
- 
- **Must Never:** count duplicate rows toward call volume or any rate without de-duplicating on `Conversation ID` first. Total call count is the denominator for most operational metrics, so an undetected duplicate deflates every rate computed from it.
++`Build Call Record` runs on an independent branch (decoupled from the notes chain in v27.2), so its `$json` is the output of `Parse Post Call Data`, not the raw webhook. It therefore reads the ElevenLabs payload by absolute reference — `$('ElevenLabs Post Call Webhook').first().json` — falling back to `$json` only if that node is unavailable. Any future edit to this node must preserve the absolute reference; reading `$json` as the payload reintroduces BUG-002 (all payload-derived fields go blank).
 +
 +---
 +
-+# I-13 — The workflow actually executes (webhook response mode)
+ # Payload Shape (diagnostic)
+ 
+ `Payload Shape` records the **structure** of each received payload — the key names present on `data`, `metadata`, `analysis`, `data_collection_results`, and `dynamic_variables`; the type and length of `transcript`; and the keys of the first transcript turn plus the first tool-call-shaped object found.
+diff --git a/production/README.md b/production/README.md
+index 9079989..2544d47 100644
+--- a/production/README.md
++++ b/production/README.md
+@@ -17,7 +17,8 @@ Rule: update these files on every deploy, in the same change as the CHANGELOG en
+ 
+ # Release Candidates — not deployed
+ 
+-- workflow-v27.2.json — BUG-001 fix: canonical phone format, zero-item halt guard, and instrumentation decoupled from notes (supersedes v27.1). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.3.json — BUG-002 fix: Build Call Record reads the ElevenLabs webhook payload via an absolute reference (supersedes v27.2). Restores metadata/analysis/transcript extraction that v27.2's decoupling inadvertently cut off. Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.2.json — superseded by v27.3. Do not deploy: Call Record fields read unknown because Build Call Record read the wrong payload source (BUG-002).
+ - workflow-v27.1.json — superseded by v27.2. Do not deploy: post-call chain halts before Call_Records (BUG-001).
+ - workflow-v27.0.json — superseded. Do not deploy: its post-call webhook cannot execute (responseMode conflict, fixed in v27.1).
+ 
+diff --git a/tests/instrumentation.md b/tests/instrumentation.md
+index d496659..2e012fc 100644
+--- a/tests/instrumentation.md
++++ b/tests/instrumentation.md
+@@ -198,3 +198,25 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` →
+ **Expected:** the `Respond to ElevenLabs` node is reached exactly once, on the notes branch. The instrumentation branch terminates at `Append Call Record` with no response node.
+ 
+ **Must Never:** send two HTTP responses, or send none (which would leave ElevenLabs waiting).
 +
-+**Setup:** a real post-call webhook delivery reaches the production endpoint.
++---
 +
-+**Expected:** the workflow runs to completion and returns HTTP 200 via the `Respond to ElevenLabs` node.
++# I-18 — Build Call Record reads the webhook payload, not the parser output (BUG-002)
++
++**Setup:** a completed call. Inspect the Call_Records row and the `Payload Shape` column.
++
++**Expected:** `Payload Shape` reports the real webhook structure — `data:[conversation_id,metadata,analysis,...]` with populated `metadata:[...]` and a `transcript:array(N)` — NOT `data:[conversationId,callerPhone,notesText,timestamp]` (which is the parser's output and indicates the node is reading the wrong source).
 +
 +**Must Never:**
-+- Fail with `WorkflowConfigurationError: Unused Respond to Webhook node found`. This occurs when the webhook's response mode is `lastNode` while a `respondToWebhook` node is present — the workflow refuses to execute and nothing downstream runs, including note updates and the Call Record. The webhook must use response mode `responseNode` ([OPERATIONS.md](../OPERATIONS.md) known hazards).
-+- Leave the caller's post-call processing silently skipped because the workflow never started.
++- Read `$json` as the payload. On the independent instrumentation branch `$json` is `Parse Post Call Data`'s output; the payload must come from `$('ElevenLabs Post Call Webhook').first().json`.
++- Report `metadata:[]` / `analysis:[]` / `transcript:absent` when a real payload was received — that signature means the wrong source is being read (BUG-002), not that the fields are missing.
++
++---
++
++# I-19 — Call SID falls back to static data (BUG-002)
++
++**Setup:** a call whose post-call payload does not carry the Call SID in `dynamic_variables` or `metadata`.
++
++**Expected:** `Call SID` is populated from workflow static data, where `Save Call SID to Static Data` persisted it during the call — not `unknown`.
++
++**Must Never:** report `unknown` for Call SID when the value is present in static data.

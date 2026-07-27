@@ -1,5 +1,13 @@
 # Decisions
 
+## Canonical phone format is E.164 (+1XXXXXXXXXX), not bare 10-digit
+
+BUG-001's fix task specified a canonical phone format of "10 digits, no leading 1". This was deliberately not adopted. Investigation showed the booking path, Twilio SMS delivery, and Google Calendar already standardize on E.164 (+1XXXXXXXXXX): Twilio requires E.164, and ~15 nodes write or match on it. The actual defect was that one node (Parse Post Call Data) had been rewritten to strip to bare 10-digit, diverging from that established standard and breaking the Update Appointment Notes match.
+
+Adopting bare 10-digit would have required rewriting ~15 working nodes and would have broken SMS — violating the same task's "preserve booking and scheduling behaviour" requirement. Accepted cost: the repository's canonical format contradicts the literal wording of the BUG-001 task. Chosen because preserving working production behaviour outweighs literal instruction adherence, and E.164 is the correct standard for a telephony system. Fix aligned the post-call node to E.164 instead.
+
+
+
 ## Google Sheets as the operational datastore
 
 Chosen for owner visibility and zero-cost editing. Services pricing is owner-editable with no deploys. Revisit if multi-shop or reporting needs outgrow it.

@@ -27,7 +27,7 @@ Every completed conversation produces a row, whether or not it booked. That is t
 | Timestamp | Yes | When the record was written (ISO 8601). |
 | Conversation ID | Yes | Voice-platform conversation identifier. Join key to the transcript. |
 | Call SID | Yes | Telephony call identifier. Join key to Twilio and to Call_Log. |
-| Caller Phone | Yes | Caller's phone number, normalized. Join key to Customers and Appointments. |
+| Caller Phone | Yes | Caller's phone number in canonical E.164 form (+1XXXXXXXXXX), matching the Appointments/Customers Phone column. Join key. |
 | Duration Secs | Yes | Call length in seconds, from platform metadata. |
 | Outcome | Yes | What the call produced: `booked`, `rescheduled`, `cancelled`, `handoff`, `estimate_only`, `info_only`, or a sentinel. |
 | Intent | Yes | The caller's classified intent, when configured in the platform Analysis tab. |
@@ -64,6 +64,12 @@ Three reads are not documented anywhere in this repository and are therefore att
 | `data.transcript` | Tools Fired, and the derived Outcome |
 
 Each degrades to `unknown` when absent. None is invented: if the field is not there, the column says so.
+
+---
+
+# Payload Source
+
+`Build Call Record` runs on an independent branch (decoupled from the notes chain in v27.2), so its `$json` is the output of `Parse Post Call Data`, not the raw webhook. It therefore reads the ElevenLabs payload by absolute reference — `$('ElevenLabs Post Call Webhook').first().json` — falling back to `$json` only if that node is unavailable. Any future edit to this node must preserve the absolute reference; reading `$json` as the payload reintroduces BUG-002 (all payload-derived fields go blank).
 
 ---
 
