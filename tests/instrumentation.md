@@ -198,3 +198,25 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` → 
 **Expected:** the `Respond to ElevenLabs` node is reached exactly once, on the notes branch. The instrumentation branch terminates at `Append Call Record` with no response node.
 
 **Must Never:** send two HTTP responses, or send none (which would leave ElevenLabs waiting).
+
+---
+
+# I-18 — Build Call Record reads the webhook payload, not the parser output (BUG-002)
+
+**Setup:** a completed call. Inspect the Call_Records row and the `Payload Shape` column.
+
+**Expected:** `Payload Shape` reports the real webhook structure — `data:[conversation_id,metadata,analysis,...]` with populated `metadata:[...]` and a `transcript:array(N)` — NOT `data:[conversationId,callerPhone,notesText,timestamp]` (which is the parser's output and indicates the node is reading the wrong source).
+
+**Must Never:**
+- Read `$json` as the payload. On the independent instrumentation branch `$json` is `Parse Post Call Data`'s output; the payload must come from `$('ElevenLabs Post Call Webhook').first().json`.
+- Report `metadata:[]` / `analysis:[]` / `transcript:absent` when a real payload was received — that signature means the wrong source is being read (BUG-002), not that the fields are missing.
+
+---
+
+# I-19 — Call SID falls back to static data (BUG-002)
+
+**Setup:** a call whose post-call payload does not carry the Call SID in `dynamic_variables` or `metadata`.
+
+**Expected:** `Call SID` is populated from workflow static data, where `Save Call SID to Static Data` persisted it during the call — not `unknown`.
+
+**Must Never:** report `unknown` for Call SID when the value is present in static data.

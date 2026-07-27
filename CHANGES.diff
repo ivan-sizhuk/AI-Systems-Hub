@@ -1,120 +1,82 @@
 diff --git a/CHANGELOG.md b/CHANGELOG.md
-index 031a699..12de657 100644
+index 12de657..395d9ab 100644
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
 @@ -12,6 +12,16 @@
  - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
  - Size: 334 → 322 lines with duplication removed.
  
-+## Workflow V27.2 (release candidate — NOT DEPLOYED)
++## Workflow V27.3 (release candidate — NOT DEPLOYED)
 +
-+- Fix (BUG-001): the post-call workflow halted before Call_Records were written. Three coordinated fixes.
-+- Fix 1 — canonical phone format. Parse Post Call Data's formatPhoneForSheet produced bare 10-digit (e.g. 4372415892) while the booking path, Twilio SMS, and Google Calendar all use E.164 (+14372415892). The mismatch meant Update Appointment Notes (an update matching on Phone) found no row. Aligned the post-call helper to the existing +1 E.164 convention rather than changing the whole system to bare digits — E.164 is required by Twilio and already standard in ~15 nodes, so inverting it would have broken SMS and scheduling. NOTE: the task specified a 10-digit canonical form; this was deliberately not followed because the evidence showed E.164 is the actual established standard and changing it would violate the "preserve booking/scheduling behaviour" requirement. See DECISIONS.md.
-+- Fix 2 — zero-item halt. Update Appointment Notes and Update Customer Notes now have alwaysOutputData=true, so a no-match update emits an item instead of zero items. Zero items previously terminated the entire downstream chain (n8n runs a node once per input item; zero items = nothing downstream runs).
-+- Fix 3 — instrumentation decoupled from notes. Parse Post Call Data now fans out to two independent branches: a notes branch (Update Appointment Notes -> Update Customer Notes -> Respond) and an instrumentation branch (Build Call Record -> Append Call Record). Call Record writing no longer depends on either notes update succeeding. Monitoring observes production and must not be defeated by an unrelated post-call failure.
-+- Scope: 3 nodes changed (Parse Post Call Data, Update Appointment Notes, Update Customer Notes), 3 connection rewires. Zero booking, scheduling, SMS, calendar, or prompt nodes changed (verified). Respond to ElevenLabs still fires exactly once. Monitoring schema unchanged (13 columns).
-+- Post-call architecture swept for other zero-item propagation paths: none remain.
-+- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.1. Code review, regression, and QA gate outstanding.
++- Fix (BUG-002): Call_Records rows were created but most fields read unknown/not_configured. The Payload Shape diagnostic revealed the cause: data:[conversationId,callerPhone,notesText,timestamp] with metadata/analysis/collected/dynvars empty and transcript absent — i.e. Build Call Record was reading the output of Parse Post Call Data, not the raw ElevenLabs webhook.
++- Root cause: introduced by V27.2 Fix 3. Decoupling moved Build Call Record onto an independent branch driven from Parse Post Call Data, so $json became the parser's output rather than the webhook body. The architecture was correct; the payload source was wrong.
++- Change: Build Call Record now reads the payload via an ABSOLUTE reference — $('ElevenLabs Post Call Webhook').first().json — with a graceful fallback to $json if that reference is ever unavailable. This restores metadata/analysis/transcript without re-coupling to the notes chain: the branch structure from V27.2 is unchanged.
++- Also added a Call SID fallback to workflow static data ($getWorkflowStaticData('global').call_sid), which 'Save Call SID to Static Data' persists during the call, for cases where the post-call payload omits it.
++- Scope: exactly 1 node changed (Build Call Record). Connections identical to V27.2. No booking, scheduling, calendar, reminder-SMS, prompt, or customer-facing node touched. Monitoring schema unchanged (13 columns). Payload Shape retained for one validation cycle.
++- Verified against the exact failing condition: with the real payload reachable, Duration Secs, Tools Fired, and Outcome populate; Call SID falls back to static data when absent; the node degrades gracefully (13 columns, no throw) if the webhook reference returns nothing.
++- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.2. Code review, regression, and QA gate outstanding.
 +
- ## Workflow V27.1 (release candidate — NOT DEPLOYED)
+ ## Workflow V27.2 (release candidate — NOT DEPLOYED)
  
- - Fix: post-call webhook never executed on a real call. The ElevenLabs Post Call Webhook node used responseMode 'lastNode' while the workflow also contains a dedicated 'Respond to ElevenLabs' (respondToWebhook) node. n8n rejects this combination with WorkflowConfigurationError: "Unused Respond to Webhook node found in the workflow", and refuses to run the workflow at all — so notes were not written and no Call Record was appended.
-diff --git a/DECISIONS.md b/DECISIONS.md
-index cd48778..f9ad3fc 100644
---- a/DECISIONS.md
-+++ b/DECISIONS.md
-@@ -1,5 +1,13 @@
- # Decisions
- 
-+## Canonical phone format is E.164 (+1XXXXXXXXXX), not bare 10-digit
-+
-+BUG-001's fix task specified a canonical phone format of "10 digits, no leading 1". This was deliberately not adopted. Investigation showed the booking path, Twilio SMS delivery, and Google Calendar already standardize on E.164 (+1XXXXXXXXXX): Twilio requires E.164, and ~15 nodes write or match on it. The actual defect was that one node (Parse Post Call Data) had been rewritten to strip to bare 10-digit, diverging from that established standard and breaking the Update Appointment Notes match.
-+
-+Adopting bare 10-digit would have required rewriting ~15 working nodes and would have broken SMS — violating the same task's "preserve booking and scheduling behaviour" requirement. Accepted cost: the repository's canonical format contradicts the literal wording of the BUG-001 task. Chosen because preserving working production behaviour outweighs literal instruction adherence, and E.164 is the correct standard for a telephony system. Fix aligned the post-call node to E.164 instead.
-+
-+
-+
- ## Google Sheets as the operational datastore
- 
- Chosen for owner visibility and zero-cost editing. Services pricing is owner-editable with no deploys. Revisit if multi-shop or reporting needs outgrow it.
+ - Fix (BUG-001): the post-call workflow halted before Call_Records were written. Three coordinated fixes.
 diff --git a/docs/data-model/call-records.md b/docs/data-model/call-records.md
-index 27db2f2..564a7b3 100644
+index 564a7b3..81866a0 100644
 --- a/docs/data-model/call-records.md
 +++ b/docs/data-model/call-records.md
-@@ -27,7 +27,7 @@ Every completed conversation produces a row, whether or not it booked. That is t
- | Timestamp | Yes | When the record was written (ISO 8601). |
- | Conversation ID | Yes | Voice-platform conversation identifier. Join key to the transcript. |
- | Call SID | Yes | Telephony call identifier. Join key to Twilio and to Call_Log. |
--| Caller Phone | Yes | Caller's phone number, normalized. Join key to Customers and Appointments. |
-+| Caller Phone | Yes | Caller's phone number in canonical E.164 form (+1XXXXXXXXXX), matching the Appointments/Customers Phone column. Join key. |
- | Duration Secs | Yes | Call length in seconds, from platform metadata. |
- | Outcome | Yes | What the call produced: `booked`, `rescheduled`, `cancelled`, `handoff`, `estimate_only`, `info_only`, or a sentinel. |
- | Intent | Yes | The caller's classified intent, when configured in the platform Analysis tab. |
+@@ -67,6 +67,12 @@ Each degrades to `unknown` when absent. None is invented: if the field is not th
+ 
+ ---
+ 
++# Payload Source
++
++`Build Call Record` runs on an independent branch (decoupled from the notes chain in v27.2), so its `$json` is the output of `Parse Post Call Data`, not the raw webhook. It therefore reads the ElevenLabs payload by absolute reference — `$('ElevenLabs Post Call Webhook').first().json` — falling back to `$json` only if that node is unavailable. Any future edit to this node must preserve the absolute reference; reading `$json` as the payload reintroduces BUG-002 (all payload-derived fields go blank).
++
++---
++
+ # Payload Shape (diagnostic)
+ 
+ `Payload Shape` records the **structure** of each received payload — the key names present on `data`, `metadata`, `analysis`, `data_collection_results`, and `dynamic_variables`; the type and length of `transcript`; and the keys of the first transcript turn plus the first tool-call-shaped object found.
 diff --git a/production/README.md b/production/README.md
-index abe0360..9079989 100644
+index 9079989..2544d47 100644
 --- a/production/README.md
 +++ b/production/README.md
 @@ -17,7 +17,8 @@ Rule: update these files on every deploy, in the same change as the CHANGELOG en
  
  # Release Candidates — not deployed
  
--- workflow-v27.1.json — per-call Call Record instrumentation, with the post-call webhook response-mode fix (supersedes v27.0). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
-+- workflow-v27.2.json — BUG-001 fix: canonical phone format, zero-item halt guard, and instrumentation decoupled from notes (supersedes v27.1). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
-+- workflow-v27.1.json — superseded by v27.2. Do not deploy: post-call chain halts before Call_Records (BUG-001).
+-- workflow-v27.2.json — BUG-001 fix: canonical phone format, zero-item halt guard, and instrumentation decoupled from notes (supersedes v27.1). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.3.json — BUG-002 fix: Build Call Record reads the ElevenLabs webhook payload via an absolute reference (supersedes v27.2). Restores metadata/analysis/transcript extraction that v27.2's decoupling inadvertently cut off. Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.2.json — superseded by v27.3. Do not deploy: Call Record fields read unknown because Build Call Record read the wrong payload source (BUG-002).
+ - workflow-v27.1.json — superseded by v27.2. Do not deploy: post-call chain halts before Call_Records (BUG-001).
  - workflow-v27.0.json — superseded. Do not deploy: its post-call webhook cannot execute (responseMode conflict, fixed in v27.1).
  
- A candidate becomes production only after a QA PASS, when the Release Engineer deploys it per [OPERATIONS.md](../OPERATIONS.md) and moves it into the list above.
 diff --git a/tests/instrumentation.md b/tests/instrumentation.md
-index 2026b56..d496659 100644
+index d496659..2e012fc 100644
 --- a/tests/instrumentation.md
 +++ b/tests/instrumentation.md
-@@ -152,3 +152,49 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` →
- **Must Never:**
- - Fail with `WorkflowConfigurationError: Unused Respond to Webhook node found`. This occurs when the webhook's response mode is `lastNode` while a `respondToWebhook` node is present — the workflow refuses to execute and nothing downstream runs, including note updates and the Call Record. The webhook must use response mode `responseNode` ([OPERATIONS.md](../OPERATIONS.md) known hazards).
- - Leave the caller's post-call processing silently skipped because the workflow never started.
+@@ -198,3 +198,25 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` →
+ **Expected:** the `Respond to ElevenLabs` node is reached exactly once, on the notes branch. The instrumentation branch terminates at `Append Call Record` with no response node.
+ 
+ **Must Never:** send two HTTP responses, or send none (which would leave ElevenLabs waiting).
 +
 +---
 +
-+# I-14 — Post-call chain does not halt on an unmatched notes update (BUG-001)
++# I-18 — Build Call Record reads the webhook payload, not the parser output (BUG-002)
 +
-+**Setup:** a completed call whose phone does not match any Appointments row (e.g. a caller with no existing appointment, or a transient format edge case).
++**Setup:** a completed call. Inspect the Call_Records row and the `Payload Shape` column.
 +
-+**Expected:** `Update Appointment Notes` finds no row, emits an item anyway (`alwaysOutputData`), and the chain continues. A Call Record is still written.
++**Expected:** `Payload Shape` reports the real webhook structure — `data:[conversation_id,metadata,analysis,...]` with populated `metadata:[...]` and a `transcript:array(N)` — NOT `data:[conversationId,callerPhone,notesText,timestamp]` (which is the parser's output and indicates the node is reading the wrong source).
 +
 +**Must Never:**
-+- Halt the workflow because a notes update matched zero rows. Zero output items from any post-call node terminate everything downstream (n8n runs a node once per input item).
-+- Skip the Call Record because notes had nothing to update.
++- Read `$json` as the payload. On the independent instrumentation branch `$json` is `Parse Post Call Data`'s output; the payload must come from `$('ElevenLabs Post Call Webhook').first().json`.
++- Report `metadata:[]` / `analysis:[]` / `transcript:absent` when a real payload was received — that signature means the wrong source is being read (BUG-002), not that the fields are missing.
 +
 +---
 +
-+# I-15 — Instrumentation is independent of notes updates (BUG-001, Fix 3)
++# I-19 — Call SID falls back to static data (BUG-002)
 +
-+**Setup:** force a notes-update failure (unmatched phone, or a Sheets error on the notes nodes).
++**Setup:** a call whose post-call payload does not carry the Call SID in `dynamic_variables` or `metadata`.
 +
-+**Expected:** `Build Call Record` and `Append Call Record` still execute and write a row, because they run on a branch driven directly from `Parse Post Call Data`, not downstream of the notes nodes.
++**Expected:** `Call SID` is populated from workflow static data, where `Save Call SID to Static Data` persisted it during the call — not `unknown`.
 +
-+**Must Never:**
-+- Make Call Record writing conditional on `Update Appointment Notes` or `Update Customer Notes` succeeding.
-+- Route the instrumentation branch through the notes branch.
-+
-+---
-+
-+# I-16 — Phone format is canonical across the workflow (BUG-001, Fix 1)
-+
-+**Setup:** a booking call, then inspect the Appointments/Customers Phone column and the post-call match value.
-+
-+**Expected:** both are E.164 (`+1XXXXXXXXXX`). The post-call `Update Appointment Notes` match value equals the stored Phone value, so the update matches.
-+
-+**Must Never:**
-+- Write or match a bare 10-digit or 11-digit phone that will not equal the E.164 value stored by the booking path.
-+- Break Twilio SMS, which requires E.164.
-+
-+---
-+
-+# I-17 — Respond to ElevenLabs fires exactly once
-+
-+**Setup:** any completed post-call webhook with the two-branch layout (notes + instrumentation).
-+
-+**Expected:** the `Respond to ElevenLabs` node is reached exactly once, on the notes branch. The instrumentation branch terminates at `Append Call Record` with no response node.
-+
-+**Must Never:** send two HTTP responses, or send none (which would leave ElevenLabs waiting).
++**Must Never:** report `unknown` for Call SID when the value is present in static data.

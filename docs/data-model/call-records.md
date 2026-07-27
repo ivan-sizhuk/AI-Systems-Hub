@@ -67,6 +67,12 @@ Each degrades to `unknown` when absent. None is invented: if the field is not th
 
 ---
 
+# Payload Source
+
+`Build Call Record` runs on an independent branch (decoupled from the notes chain in v27.2), so its `$json` is the output of `Parse Post Call Data`, not the raw webhook. It therefore reads the ElevenLabs payload by absolute reference — `$('ElevenLabs Post Call Webhook').first().json` — falling back to `$json` only if that node is unavailable. Any future edit to this node must preserve the absolute reference; reading `$json` as the payload reintroduces BUG-002 (all payload-derived fields go blank).
+
+---
+
 # Payload Shape (diagnostic)
 
 `Payload Shape` records the **structure** of each received payload — the key names present on `data`, `metadata`, `analysis`, `data_collection_results`, and `dynamic_variables`; the type and length of `transcript`; and the keys of the first transcript turn plus the first tool-call-shaped object found.
