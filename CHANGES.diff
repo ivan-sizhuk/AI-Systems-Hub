@@ -1,82 +1,99 @@
 diff --git a/CHANGELOG.md b/CHANGELOG.md
-index 12de657..395d9ab 100644
+index 395d9ab..36352bd 100644
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
 @@ -12,6 +12,16 @@
  - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
  - Size: 334 → 322 lines with duplication removed.
  
-+## Workflow V27.3 (release candidate — NOT DEPLOYED)
++## Workflow V27.4 (release candidate — NOT DEPLOYED)
 +
-+- Fix (BUG-002): Call_Records rows were created but most fields read unknown/not_configured. The Payload Shape diagnostic revealed the cause: data:[conversationId,callerPhone,notesText,timestamp] with metadata/analysis/collected/dynvars empty and transcript absent — i.e. Build Call Record was reading the output of Parse Post Call Data, not the raw ElevenLabs webhook.
-+- Root cause: introduced by V27.2 Fix 3. Decoupling moved Build Call Record onto an independent branch driven from Parse Post Call Data, so $json became the parser's output rather than the webhook body. The architecture was correct; the payload source was wrong.
-+- Change: Build Call Record now reads the payload via an ABSOLUTE reference — $('ElevenLabs Post Call Webhook').first().json — with a graceful fallback to $json if that reference is ever unavailable. This restores metadata/analysis/transcript without re-coupling to the notes chain: the branch structure from V27.2 is unchanged.
-+- Also added a Call SID fallback to workflow static data ($getWorkflowStaticData('global').call_sid), which 'Save Call SID to Static Data' persists during the call, for cases where the post-call payload omits it.
-+- Scope: exactly 1 node changed (Build Call Record). Connections identical to V27.2. No booking, scheduling, calendar, reminder-SMS, prompt, or customer-facing node touched. Monitoring schema unchanged (13 columns). Payload Shape retained for one validation cycle.
-+- Verified against the exact failing condition: with the real payload reachable, Duration Secs, Tools Fired, and Outcome populate; Call SID falls back to static data when absent; the node degrades gracefully (13 columns, no throw) if the webhook reference returns nothing.
-+- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.2. Code review, regression, and QA gate outstanding.
++- Fix (BUG-003): a placeholder appointment row (Appointment ID ___NO_OLD_APPOINTMENT___, Status Rebooked) was created every time a first-time customer booked.
++- Root cause: the booking flow always runs a supersede sub-chain (Extract Old Event ID -> Delete Old Calendar Event -> Mark Old Appointment Rebooked) to overwrite a returning customer's previous appointment. For first-time customers, oldAppointmentId is empty. Mark Old Appointment Rebooked was operation=appendOrUpdate matching on Appointment ID with a fallback of '___NO_OLD_APPOINTMENT___'; the sentinel matched no row, so appendOrUpdate APPENDED a fake row.
++- The placeholder was write-only: no node reads it and no node filters on Rebooked status (the reminder engine uses positive inclusion of booked/rescheduled), so it was pure data pollution.
++- Fix: changed Mark Old Appointment Rebooked to operation=update with alwaysOutputData=true, and removed the sentinel fallback. For a returning customer the real row is still matched and updated to Rebooked — identical behaviour. For a first-time customer the empty ID matches nothing and updates nothing (no fake row); alwaysOutputData keeps the item flowing to Restore Payload so the real appointment write and the rest of the booking chain are unaffected.
++- Why not a Filter/IF: filtering first-time items out before this node would remove them from the booking chain entirely (Restore Payload and Append row in sheet1 are downstream), which would prevent the real appointment from being written. The update+alwaysOutputData approach fixes the bug with zero new nodes and zero rewiring.
++- Scope: exactly 1 node changed (Mark Old Appointment Rebooked). Status and Notes column mappings unchanged. Connections identical. No booking, rescheduling, cancellation, lookup, SMS, calendar, or monitoring node touched.
++- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.3. Code review, regression, and QA gate outstanding.
 +
- ## Workflow V27.2 (release candidate — NOT DEPLOYED)
+ ## Workflow V27.3 (release candidate — NOT DEPLOYED)
  
- - Fix (BUG-001): the post-call workflow halted before Call_Records were written. Three coordinated fixes.
-diff --git a/docs/data-model/call-records.md b/docs/data-model/call-records.md
-index 564a7b3..81866a0 100644
---- a/docs/data-model/call-records.md
-+++ b/docs/data-model/call-records.md
-@@ -67,6 +67,12 @@ Each degrades to `unknown` when absent. None is invented: if the field is not th
- 
- ---
- 
-+# Payload Source
-+
-+`Build Call Record` runs on an independent branch (decoupled from the notes chain in v27.2), so its `$json` is the output of `Parse Post Call Data`, not the raw webhook. It therefore reads the ElevenLabs payload by absolute reference — `$('ElevenLabs Post Call Webhook').first().json` — falling back to `$json` only if that node is unavailable. Any future edit to this node must preserve the absolute reference; reading `$json` as the payload reintroduces BUG-002 (all payload-derived fields go blank).
-+
-+---
-+
- # Payload Shape (diagnostic)
- 
- `Payload Shape` records the **structure** of each received payload — the key names present on `data`, `metadata`, `analysis`, `data_collection_results`, and `dynamic_variables`; the type and length of `transcript`; and the keys of the first transcript turn plus the first tool-call-shaped object found.
+ - Fix (BUG-002): Call_Records rows were created but most fields read unknown/not_configured. The Payload Shape diagnostic revealed the cause: data:[conversationId,callerPhone,notesText,timestamp] with metadata/analysis/collected/dynvars empty and transcript absent — i.e. Build Call Record was reading the output of Parse Post Call Data, not the raw ElevenLabs webhook.
 diff --git a/production/README.md b/production/README.md
-index 9079989..2544d47 100644
+index 2544d47..755e679 100644
 --- a/production/README.md
 +++ b/production/README.md
 @@ -17,7 +17,8 @@ Rule: update these files on every deploy, in the same change as the CHANGELOG en
  
  # Release Candidates — not deployed
  
--- workflow-v27.2.json — BUG-001 fix: canonical phone format, zero-item halt guard, and instrumentation decoupled from notes (supersedes v27.1). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
-+- workflow-v27.3.json — BUG-002 fix: Build Call Record reads the ElevenLabs webhook payload via an absolute reference (supersedes v27.2). Restores metadata/analysis/transcript extraction that v27.2's decoupling inadvertently cut off. Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
-+- workflow-v27.2.json — superseded by v27.3. Do not deploy: Call Record fields read unknown because Build Call Record read the wrong payload source (BUG-002).
+-- workflow-v27.3.json — BUG-002 fix: Build Call Record reads the ElevenLabs webhook payload via an absolute reference (supersedes v27.2). Restores metadata/analysis/transcript extraction that v27.2's decoupling inadvertently cut off. Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.4.json — BUG-003 fix: first-time bookings no longer create a placeholder ___NO_OLD_APPOINTMENT___ row (supersedes v27.3). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
++- workflow-v27.3.json — superseded by v27.4. Contains BUG-003 (placeholder row on first-time booking).
+ - workflow-v27.2.json — superseded by v27.3. Do not deploy: Call Record fields read unknown because Build Call Record read the wrong payload source (BUG-002).
  - workflow-v27.1.json — superseded by v27.2. Do not deploy: post-call chain halts before Call_Records (BUG-001).
  - workflow-v27.0.json — superseded. Do not deploy: its post-call webhook cannot execute (responseMode conflict, fixed in v27.1).
+diff --git a/tests/booking.md b/tests/booking.md
+index 1c9a0e0..0516a00 100644
+--- a/tests/booking.md
++++ b/tests/booking.md
+@@ -191,3 +191,59 @@ Caller refuses a number: no booking (phone is required).
  
-diff --git a/tests/instrumentation.md b/tests/instrumentation.md
-index d496659..2e012fc 100644
---- a/tests/instrumentation.md
-+++ b/tests/instrumentation.md
-@@ -198,3 +198,25 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` →
- **Expected:** the `Respond to ElevenLabs` node is reached exactly once, on the notes branch. The instrumentation branch terminates at `Append Call Record` with no response node.
- 
- **Must Never:** send two HTTP responses, or send none (which would leave ElevenLabs waiting).
+ - Ask for the phone number when caller_phone exists.
+ - Use a number spoken casually mid-call in place of caller_phone when caller_phone exists.
 +
 +---
 +
-+# I-18 — Build Call Record reads the webhook payload, not the parser output (BUG-002)
++# Scenario: First-time customer booking creates no placeholder row (BUG-003)
 +
-+**Setup:** a completed call. Inspect the Call_Records row and the `Payload Shape` column.
++## Customer Input
 +
-+**Expected:** `Payload Shape` reports the real webhook structure — `data:[conversation_id,metadata,analysis,...]` with populated `metadata:[...]` and a `transcript:array(N)` — NOT `data:[conversationId,callerPhone,notesText,timestamp]` (which is the parser's output and indicates the node is reading the wrong source).
++A brand-new customer (no prior appointment on file) calls and books their first appointment.
 +
-+**Must Never:**
-+- Read `$json` as the payload. On the independent instrumentation branch `$json` is `Parse Post Call Data`'s output; the payload must come from `$('ElevenLabs Post Call Webhook').first().json`.
-+- Report `metadata:[]` / `analysis:[]` / `transcript:absent` when a real payload was received — that signature means the wrong source is being read (BUG-002), not that the fields are missing.
++## Expected Conversation Flow
++
++Normal booking. Nothing about this is visible to the caller.
++
++## Expected Tool Usage
++
++book_appointment.
++
++## Expected Outcome
++
++Exactly one legitimate appointment row is written to the Appointments sheet (Status Booked). No placeholder row is created.
++
++## Failure Conditions
++
++The supersede path (Mark Old Appointment Rebooked) runs as a no-op for first-time customers because there is no old appointment to mark.
++
++## Must Never
++
++- Create an appointment row with Appointment ID ___NO_OLD_APPOINTMENT___.
++- Create any row with Status Rebooked for a customer who has no previous appointment.
++- Skip or fail the real appointment write for a first-time customer (the supersede no-op must not remove the item from the booking chain).
 +
 +---
 +
-+# I-19 — Call SID falls back to static data (BUG-002)
++# Scenario: Returning customer rebooking still marks the old appointment (BUG-003 preservation)
 +
-+**Setup:** a call whose post-call payload does not carry the Call SID in `dynamic_variables` or `metadata`.
++## Customer Input
 +
-+**Expected:** `Call SID` is populated from workflow static data, where `Save Call SID to Static Data` persisted it during the call — not `unknown`.
++A returning customer with an existing Booked appointment calls and books again.
 +
-+**Must Never:** report `unknown` for Call SID when the value is present in static data.
++## Expected Conversation Flow
++
++Normal booking.
++
++## Expected Tool Usage
++
++book_appointment.
++
++## Expected Outcome
++
++The customer's previous appointment row is updated to Status Rebooked, its calendar event is deleted, and a single new appointment row is written — no duplicate. Behaviour identical to before the BUG-003 fix.
++
++## Must Never
++
++- Leave the old appointment row as Booked (it must become Rebooked).
++- Create a duplicate appointment row instead of superseding the old one.
++- Delete or alter any appointment belonging to a different customer.

@@ -191,3 +191,59 @@ Caller refuses a number: no booking (phone is required).
 
 - Ask for the phone number when caller_phone exists.
 - Use a number spoken casually mid-call in place of caller_phone when caller_phone exists.
+
+---
+
+# Scenario: First-time customer booking creates no placeholder row (BUG-003)
+
+## Customer Input
+
+A brand-new customer (no prior appointment on file) calls and books their first appointment.
+
+## Expected Conversation Flow
+
+Normal booking. Nothing about this is visible to the caller.
+
+## Expected Tool Usage
+
+book_appointment.
+
+## Expected Outcome
+
+Exactly one legitimate appointment row is written to the Appointments sheet (Status Booked). No placeholder row is created.
+
+## Failure Conditions
+
+The supersede path (Mark Old Appointment Rebooked) runs as a no-op for first-time customers because there is no old appointment to mark.
+
+## Must Never
+
+- Create an appointment row with Appointment ID ___NO_OLD_APPOINTMENT___.
+- Create any row with Status Rebooked for a customer who has no previous appointment.
+- Skip or fail the real appointment write for a first-time customer (the supersede no-op must not remove the item from the booking chain).
+
+---
+
+# Scenario: Returning customer rebooking still marks the old appointment (BUG-003 preservation)
+
+## Customer Input
+
+A returning customer with an existing Booked appointment calls and books again.
+
+## Expected Conversation Flow
+
+Normal booking.
+
+## Expected Tool Usage
+
+book_appointment.
+
+## Expected Outcome
+
+The customer's previous appointment row is updated to Status Rebooked, its calendar event is deleted, and a single new appointment row is written — no duplicate. Behaviour identical to before the BUG-003 fix.
+
+## Must Never
+
+- Leave the old appointment row as Booked (it must become Rebooked).
+- Create a duplicate appointment row instead of superseding the old one.
+- Delete or alter any appointment belonging to a different customer.

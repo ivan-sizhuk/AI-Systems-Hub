@@ -12,6 +12,16 @@
 - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
 - Size: 334 → 322 lines with duplication removed.
 
+## Workflow V27.4 (release candidate — NOT DEPLOYED)
+
+- Fix (BUG-003): a placeholder appointment row (Appointment ID ___NO_OLD_APPOINTMENT___, Status Rebooked) was created every time a first-time customer booked.
+- Root cause: the booking flow always runs a supersede sub-chain (Extract Old Event ID -> Delete Old Calendar Event -> Mark Old Appointment Rebooked) to overwrite a returning customer's previous appointment. For first-time customers, oldAppointmentId is empty. Mark Old Appointment Rebooked was operation=appendOrUpdate matching on Appointment ID with a fallback of '___NO_OLD_APPOINTMENT___'; the sentinel matched no row, so appendOrUpdate APPENDED a fake row.
+- The placeholder was write-only: no node reads it and no node filters on Rebooked status (the reminder engine uses positive inclusion of booked/rescheduled), so it was pure data pollution.
+- Fix: changed Mark Old Appointment Rebooked to operation=update with alwaysOutputData=true, and removed the sentinel fallback. For a returning customer the real row is still matched and updated to Rebooked — identical behaviour. For a first-time customer the empty ID matches nothing and updates nothing (no fake row); alwaysOutputData keeps the item flowing to Restore Payload so the real appointment write and the rest of the booking chain are unaffected.
+- Why not a Filter/IF: filtering first-time items out before this node would remove them from the booking chain entirely (Restore Payload and Append row in sheet1 are downstream), which would prevent the real appointment from being written. The update+alwaysOutputData approach fixes the bug with zero new nodes and zero rewiring.
+- Scope: exactly 1 node changed (Mark Old Appointment Rebooked). Status and Notes column mappings unchanged. Connections identical. No booking, rescheduling, cancellation, lookup, SMS, calendar, or monitoring node touched.
+- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.3. Code review, regression, and QA gate outstanding.
+
 ## Workflow V27.3 (release candidate — NOT DEPLOYED)
 
 - Fix (BUG-002): Call_Records rows were created but most fields read unknown/not_configured. The Payload Shape diagnostic revealed the cause: data:[conversationId,callerPhone,notesText,timestamp] with metadata/analysis/collected/dynvars empty and transcript absent — i.e. Build Call Record was reading the output of Parse Post Call Data, not the raw ElevenLabs webhook.
