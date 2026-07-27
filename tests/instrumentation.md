@@ -152,3 +152,49 @@ Derivation order: `book_appointment` → `booked`; `reschedule_appointment` → 
 **Must Never:**
 - Fail with `WorkflowConfigurationError: Unused Respond to Webhook node found`. This occurs when the webhook's response mode is `lastNode` while a `respondToWebhook` node is present — the workflow refuses to execute and nothing downstream runs, including note updates and the Call Record. The webhook must use response mode `responseNode` ([OPERATIONS.md](../OPERATIONS.md) known hazards).
 - Leave the caller's post-call processing silently skipped because the workflow never started.
+
+---
+
+# I-14 — Post-call chain does not halt on an unmatched notes update (BUG-001)
+
+**Setup:** a completed call whose phone does not match any Appointments row (e.g. a caller with no existing appointment, or a transient format edge case).
+
+**Expected:** `Update Appointment Notes` finds no row, emits an item anyway (`alwaysOutputData`), and the chain continues. A Call Record is still written.
+
+**Must Never:**
+- Halt the workflow because a notes update matched zero rows. Zero output items from any post-call node terminate everything downstream (n8n runs a node once per input item).
+- Skip the Call Record because notes had nothing to update.
+
+---
+
+# I-15 — Instrumentation is independent of notes updates (BUG-001, Fix 3)
+
+**Setup:** force a notes-update failure (unmatched phone, or a Sheets error on the notes nodes).
+
+**Expected:** `Build Call Record` and `Append Call Record` still execute and write a row, because they run on a branch driven directly from `Parse Post Call Data`, not downstream of the notes nodes.
+
+**Must Never:**
+- Make Call Record writing conditional on `Update Appointment Notes` or `Update Customer Notes` succeeding.
+- Route the instrumentation branch through the notes branch.
+
+---
+
+# I-16 — Phone format is canonical across the workflow (BUG-001, Fix 1)
+
+**Setup:** a booking call, then inspect the Appointments/Customers Phone column and the post-call match value.
+
+**Expected:** both are E.164 (`+1XXXXXXXXXX`). The post-call `Update Appointment Notes` match value equals the stored Phone value, so the update matches.
+
+**Must Never:**
+- Write or match a bare 10-digit or 11-digit phone that will not equal the E.164 value stored by the booking path.
+- Break Twilio SMS, which requires E.164.
+
+---
+
+# I-17 — Respond to ElevenLabs fires exactly once
+
+**Setup:** any completed post-call webhook with the two-branch layout (notes + instrumentation).
+
+**Expected:** the `Respond to ElevenLabs` node is reached exactly once, on the notes branch. The instrumentation branch terminates at `Append Call Record` with no response node.
+
+**Must Never:** send two HTTP responses, or send none (which would leave ElevenLabs waiting).

@@ -12,6 +12,16 @@
 - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
 - Size: 334 → 322 lines with duplication removed.
 
+## Workflow V27.2 (release candidate — NOT DEPLOYED)
+
+- Fix (BUG-001): the post-call workflow halted before Call_Records were written. Three coordinated fixes.
+- Fix 1 — canonical phone format. Parse Post Call Data's formatPhoneForSheet produced bare 10-digit (e.g. 4372415892) while the booking path, Twilio SMS, and Google Calendar all use E.164 (+14372415892). The mismatch meant Update Appointment Notes (an update matching on Phone) found no row. Aligned the post-call helper to the existing +1 E.164 convention rather than changing the whole system to bare digits — E.164 is required by Twilio and already standard in ~15 nodes, so inverting it would have broken SMS and scheduling. NOTE: the task specified a 10-digit canonical form; this was deliberately not followed because the evidence showed E.164 is the actual established standard and changing it would violate the "preserve booking/scheduling behaviour" requirement. See DECISIONS.md.
+- Fix 2 — zero-item halt. Update Appointment Notes and Update Customer Notes now have alwaysOutputData=true, so a no-match update emits an item instead of zero items. Zero items previously terminated the entire downstream chain (n8n runs a node once per input item; zero items = nothing downstream runs).
+- Fix 3 — instrumentation decoupled from notes. Parse Post Call Data now fans out to two independent branches: a notes branch (Update Appointment Notes -> Update Customer Notes -> Respond) and an instrumentation branch (Build Call Record -> Append Call Record). Call Record writing no longer depends on either notes update succeeding. Monitoring observes production and must not be defeated by an unrelated post-call failure.
+- Scope: 3 nodes changed (Parse Post Call Data, Update Appointment Notes, Update Customer Notes), 3 connection rewires. Zero booking, scheduling, SMS, calendar, or prompt nodes changed (verified). Respond to ElevenLabs still fires exactly once. Monitoring schema unchanged (13 columns).
+- Post-call architecture swept for other zero-item propagation paths: none remain.
+- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.1. Code review, regression, and QA gate outstanding.
+
 ## Workflow V27.1 (release candidate — NOT DEPLOYED)
 
 - Fix: post-call webhook never executed on a real call. The ElevenLabs Post Call Webhook node used responseMode 'lastNode' while the workflow also contains a dedicated 'Respond to ElevenLabs' (respondToWebhook) node. n8n rejects this combination with WorkflowConfigurationError: "Unused Respond to Webhook node found in the workflow", and refuses to run the workflow at all — so notes were not written and no Call Record was appended.

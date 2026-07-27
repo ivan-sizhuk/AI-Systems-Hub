@@ -27,7 +27,7 @@ Every completed conversation produces a row, whether or not it booked. That is t
 | Timestamp | Yes | When the record was written (ISO 8601). |
 | Conversation ID | Yes | Voice-platform conversation identifier. Join key to the transcript. |
 | Call SID | Yes | Telephony call identifier. Join key to Twilio and to Call_Log. |
-| Caller Phone | Yes | Caller's phone number, normalized. Join key to Customers and Appointments. |
+| Caller Phone | Yes | Caller's phone number in canonical E.164 form (+1XXXXXXXXXX), matching the Appointments/Customers Phone column. Join key. |
 | Duration Secs | Yes | Call length in seconds, from platform metadata. |
 | Outcome | Yes | What the call produced: `booked`, `rescheduled`, `cancelled`, `handoff`, `estimate_only`, `info_only`, or a sentinel. |
 | Intent | Yes | The caller's classified intent, when configured in the platform Analysis tab. |
