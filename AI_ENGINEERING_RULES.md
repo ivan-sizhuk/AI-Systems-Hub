@@ -1,7 +1,7 @@
 # AI Engineering Rules
 
-**Version:** 1.0
-**Last Updated:** 2026-07-29
+**Version:** 1.1
+**Last Updated:** 2026-07-30
 
 This document defines the mandatory engineering process for this repository. It is
 the single authoritative engineering-rules document. Future revisions must
@@ -9,6 +9,11 @@ the single authoritative engineering-rules document. Future revisions must
 changing the process.
 
 ## Change Log
+
+### v1.1 — 2026-07-30
+- Added "Which workflow version to use" (investigate production-of-record;
+  implement on the current working head; historical versions live in
+  `production/archive/` and are read-only)
 
 ### v1.0 — 2026-07-29
 - Initial engineering process
@@ -376,6 +381,24 @@ the step between `Investigating` and `Confirmed`/`Present Findings` in the
 lifecycle), and is stored as `investigations/INV-XXX.md` — conventionally sharing
 the number of the bug it investigates (BUG-010 → INV-010). See
 `investigations/README.md` for the required contents.
+
+## Working with workflow versions
+
+`production/` holds only the **current** artifacts; superseded and rollback
+versions live in `production/archive/` (read-only history; full history is also in
+Git / GitHub). Do not mix them:
+
+- **Investigate a production bug against the production of record** — the deployed
+  workflow named in `production/README.md` (currently `workflow-v26.9.json`),
+  because that is what is actually running.
+- **Implement an approved fix on the current working head** — the latest release
+  candidate in `production/README.md` (currently `workflow-v27.4.json`), so the
+  fix inherits prior candidate fixes and becomes the next candidate.
+- **Never investigate or edit anything in `production/archive/`.** When confirming
+  a defect, verify whether it also exists in the working head (it usually does),
+  and record which versions were examined in the investigation.
+- On deploy, move the outgoing production-of-record into `production/archive/` and
+  update `production/README.md` and `production/archive/README.md`.
 
 ---
 

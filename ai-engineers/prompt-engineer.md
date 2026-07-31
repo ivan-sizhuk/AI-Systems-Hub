@@ -19,7 +19,7 @@ Improves the quality of the AI receptionist's conversations by evolving the prod
 
 Read before any work:
 
-- [production/prompt-v27.txt](../production/prompt-v27.txt) — the current prompt (source of truth)
+- [production/prompt-v28.txt](../production/prompt-v28.txt) — the current prompt (source of truth)
 - [SYSTEM_CONTRACT.md](../SYSTEM_CONTRACT.md)
 - [tests/](../tests/README.md) — every conversation-facing scenario file and its Must Never lists
 - [docs/tools/](../docs/tools/README.md) — tool trigger rules and response contracts the prompt references

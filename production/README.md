@@ -1,26 +1,54 @@
 # Production Artifacts
 
-The deployed system, versioned. These files ARE the implementation this repository documents.
+This folder holds the **current** workflow and prompt only, so a session never
+confuses historical versions with the ones in use. Superseded and rollback
+versions live in [`archive/`](archive/README.md). Full history is also in
+Git / GitHub.
 
-Release candidates awaiting QA are listed separately at the bottom and are NOT deployed.
+These files ARE the implementation this repository documents. When documentation
+and an artifact disagree, the artifact wins and the documentation is corrected.
 
-- workflow-v26.9.json — the n8n workflow currently in production.
-- workflow-v26.8.json — previous version, retained for rollback.
-- workflow-v26.7.json — earlier version, retained.
-- workflow-v26.6.json — earlier version, retained.
-- prompt-v28.txt — the ElevenLabs system prompt currently in production.
-- prompt-v27.txt — previous prompt, retained for rollback.
+## Version Reference
 
-Rule: update these files on every deploy, in the same change as the CHANGELOG entry. Documentation describes these artifacts; when they disagree, the artifact wins and the documentation is wrong.
+- **Production Workflow:** `workflow-v26.9.json`
+- **Current Development Workflow:** `workflow-v27.4.json`
+- **Current Prompt:** `prompt-v28.txt`
+- **Historical Versions:** `production/archive/`
 
----
+## Current
 
-# Release Candidates — not deployed
+| File | Role |
+|---|---|
+| `workflow-v26.9.json` | **Production of record** — the n8n workflow currently deployed. Investigate production bugs against this file. |
+| `workflow-v27.4.json` | **Current working head** — latest release candidate (NOT deployed). Build new fixes on this file so they inherit prior candidate fixes (BUG-001/002/003). |
+| `prompt-v28.txt` | **Current prompt** — the ElevenLabs system prompt in production. |
 
-- workflow-v27.4.json — BUG-003 fix: first-time bookings no longer create a placeholder ___NO_OLD_APPOINTMENT___ row (supersedes v27.3). Stage 4 of [ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression testing, and the QA gate are outstanding. The Call_Records tab must carry all thirteen documented column headers ([call-records.md](../docs/data-model/call-records.md)) before import.
-- workflow-v27.3.json — superseded by v27.4. Contains BUG-003 (placeholder row on first-time booking).
-- workflow-v27.2.json — superseded by v27.3. Do not deploy: Call Record fields read unknown because Build Call Record read the wrong payload source (BUG-002).
-- workflow-v27.1.json — superseded by v27.2. Do not deploy: post-call chain halts before Call_Records (BUG-001).
-- workflow-v27.0.json — superseded. Do not deploy: its post-call webhook cannot execute (responseMode conflict, fixed in v27.1).
+Which version to use:
 
-A candidate becomes production only after a QA PASS, when the Release Engineer deploys it per [OPERATIONS.md](../OPERATIONS.md) and moves it into the list above.
+- **Investigate** a reported production bug against the **production of record**
+  (`workflow-v26.9.json`), because that is what is actually running.
+- **Implement** an approved fix on the **current working head**
+  (`workflow-v27.4.json`); it becomes the next release candidate.
+- Never investigate or edit files in `archive/`.
+
+## Release-candidate status
+
+`workflow-v27.4.json` is at Stage 4 of
+[ENGINEERING_LIFECYCLE.md](../ENGINEERING_LIFECYCLE.md); code review, regression
+testing, and the QA gate are outstanding. It carries the BUG-003 fix (and,
+cumulatively, BUG-001/002). A candidate becomes production only after a QA PASS,
+when the Release Engineer deploys it per [OPERATIONS.md](../OPERATIONS.md) and it
+is promoted to "Production of record" above.
+
+## Rules
+
+- Update these files on every deploy, in the same change as the CHANGELOG entry.
+- When a candidate is deployed, move the outgoing production-of-record into
+  `archive/` and update both this manifest and `archive/README.md`.
+- Do not delete historical versions from `archive/` (they are also in Git).
+
+## Archive
+
+Superseded/rollback workflows and prompts: see [`archive/`](archive/README.md).
+Immediate rollback targets are `archive/workflow-v26.8.json` and
+`archive/prompt-v27.txt`.

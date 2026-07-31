@@ -10,7 +10,7 @@ ElevenLabs provides the entire conversation layer: speech-to-text, the language 
 
 Does:
 
-- Conducts the conversation using the production system prompt (copy: production/prompt-v27.txt).
+- Conducts the conversation using the production system prompt (copy: production/prompt-v28.txt).
 - Calls the initiation webhook at call start and receives dynamic variables.
 - Invokes the nine n8n tools over MCP.
 - Sends the post-call webhook with the conversation summary after each call.
@@ -65,7 +65,7 @@ Ownership: conversation state lives here for the duration of the call and is nev
 
 # Source of Truth
 
-- Prompt: the ElevenLabs agent holds the live prompt; production/prompt-v27.txt is the versioned copy and must be updated on every prompt deploy.
+- Prompt: the ElevenLabs agent holds the live prompt; production/prompt-v28.txt is the versioned copy and must be updated on every prompt deploy.
 - Dynamic variables: generated fresh by n8n at each call start from the Business Config node.
 - Tool schemas: defined in n8n, cached by ElevenLabs — re-sync the agent's tool list after any tool change (see [OPERATIONS.md](../../OPERATIONS.md)).
 

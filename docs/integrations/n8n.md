@@ -47,7 +47,7 @@ The Business Config node holds non-secret identifiers (calendar ID, Twilio accou
 
 # Source of Truth
 
-- The single active production workflow version is the implementation; production/workflow-v26.6.json is its versioned copy.
+- The single active production workflow version is the implementation; production/workflow-v26.9.json is its versioned copy.
 - Only one workflow version may be active: multiple active copies compete for the same webhook paths and MCP endpoint ([OPERATIONS.md](../../OPERATIONS.md)).
 - Business configuration: the Business Config node — not Google Sheets ([ARCHITECTURE.md](../../ARCHITECTURE.md)).
 
