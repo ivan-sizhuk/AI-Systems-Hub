@@ -93,7 +93,13 @@ Six roles, each with its own file defining Purpose, Responsibilities, Required R
 
 `ROLE_SELECTION.md` gives explicit boundary rules for ambiguous cases (e.g., "the change alters a tool's inputs, outputs, or side effects → Workflow Engineer, and the prompt follows only if the contract changed"), and states plainly that holding two roles in one session never waives either role's checklist.
 
-One small, real gap inside this otherwise strong framework: `ai-engineers/prompt-engineer.md` still lists `production/prompt-v27.txt` as "the current prompt (source of truth)," even though `production/README.md` and `CHANGELOG.md` both agree v28 is current. Minor, self-contained, easy to fix — but worth naming since it's exactly the kind of drift this framework exists to prevent.
+One small documentation drift was identified inside this otherwise strong
+framework: `ai-engineers/prompt-engineer.md` had listed the previous prompt as
+"the current prompt (source of truth)," even though `production/README.md` and
+`CHANGELOG.md` both agree v28 is current. This was corrected on 2026-07-30 —
+`prompt-engineer.md` now references `production/prompt-v28.txt`; the previous
+prompt is retained read-only at `production/archive/prompt-v27.txt`. Noted here
+because it is exactly the kind of drift this framework exists to prevent.
 
 ---
 

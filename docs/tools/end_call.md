@@ -77,7 +77,7 @@ Never retry; the call is ending.
 
 # Related Workflows
 
-- Silence handling and end-call rules: production prompt (production/prompt-v27.txt)
+- Silence handling and end-call rules: production prompt (production/prompt-v28.txt)
 
 ---
 

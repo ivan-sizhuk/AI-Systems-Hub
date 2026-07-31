@@ -43,7 +43,7 @@ Twilio API credential (account SID + auth token) in the n8n credential store, us
 # Source of Truth
 
 - Live call state: Twilio.
-- The caller's number: the caller_phone dynamic variable captured at call start is the single source of truth ([prompt rules](../../production/prompt-v27.txt)); numbers spoken aloud are never used in its place.
+- The caller's number: the caller_phone dynamic variable captured at call start is the single source of truth ([prompt rules](../../production/prompt-v28.txt)); numbers spoken aloud are never used in its place.
 - SMS delivery status: recorded per appointment (SMS Sent?, Reminder Sent) in Google Sheets.
 
 ---
