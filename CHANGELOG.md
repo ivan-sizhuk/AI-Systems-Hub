@@ -12,6 +12,15 @@
 - Deferred with rationale: F10 (reason vocabulary lives in the workflow tool description), F12 (rebooking disclosure is a behavior addition), F15 (phone readback change alters a spoken script). F1/F3 resolved or pending per the Architecture Decision Report.
 - Size: 334 → 322 lines with duplication removed.
 
+## Workflow V27.5 (release candidate — NOT DEPLOYED)
+
+- Fix (BUG-009): Return Customer Lookup ignored the valid active-session phone and fell back to the parent workflow's phone (a placeholder/test number in the reported call), so returning customers could not be identified.
+- Root cause: the Return Customer Lookup code node parsed the Sessions-sheet `stored_at` timestamp with timezone-naive `new Date()` for its 2-hour freshness gate. `stored_at` is written as a Toronto wall-clock string with no offset, and the workflow sets no timezone, so `new Date()` used the n8n process timezone (default UTC). The ~4h Toronto offset inflated the computed age past the 2-hour window, so a fresh session phone was judged stale and discarded, and the code fell back to `trigger.caller_phone` (`+16135551212` → `searchedPhone 6135551212`). Confirmed in INV-009; the same field is parsed correctly elsewhere (Filter Old Sessions).
+- Fix: parse `stored_at` timezone-aware by reusing the exact approach already implemented in the Filter Old Sessions node — a small `parseStoredAtMs()` helper (luxon `DateTime.fromISO` then `fromFormat(..., { zone: 'America/Toronto' })` → epoch ms) — applied to both the newest-session sort and the 2-hour gate. No new parsing implementation was introduced.
+- Scope: exactly 1 node changed (Return Customer Lookup). No sibling node modified, no rewiring, no connection or settings change, no schema change. Behavior is unchanged except that a valid current session phone is now correctly preferred regardless of the process timezone (BUG-009).
+- Regression: all documented BUG-009 scenarios pass under both UTC and America/Toronto (valid session, expired session, missing session, fallback-only-when-no-session, placeholder rejection, new-customer path, empty-phone ask). See releases/v27.5.md.
+- Status: Stage 4 of ENGINEERING_LIFECYCLE.md. Supersedes V27.4. Documented regression passes; live-n8n code review and QA gate outstanding. NOT DEPLOYED (production of record remains V26.9).
+
 ## Workflow V27.4 (release candidate — NOT DEPLOYED)
 
 - Fix (BUG-003): a placeholder appointment row (Appointment ID ___NO_OLD_APPOINTMENT___, Status Rebooked) was created every time a first-time customer booked.

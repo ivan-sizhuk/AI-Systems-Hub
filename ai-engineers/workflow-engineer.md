@@ -18,7 +18,7 @@ Improves the n8n workflow — logic, reliability, and technical debt — while p
 # Required Repository Inputs
 
 - [production/workflow-v26.9.json](../production/workflow-v26.9.json) — the production implementation (production of record)
-- [production/workflow-v27.4.json](../production/workflow-v27.4.json) — the current working head; build approved fixes here (see [production/README.md](../production/README.md))
+- [production/workflow-v27.5.json](../production/workflow-v27.5.json) — the current working head; build approved fixes here (see [production/README.md](../production/README.md))
 - [docs/tools/](../docs/tools/README.md) — the contracts every change must preserve
 - [docs/workflows/](../docs/workflows/README.md) and [docs/integrations/](../docs/integrations/README.md)
 - [docs/data-model/](../docs/data-model/README.md) — status vocabulary and column contracts
