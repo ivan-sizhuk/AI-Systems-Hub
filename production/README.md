@@ -13,7 +13,8 @@ and an artifact disagree, the artifact wins and the documentation is corrected.
 - **Production Workflow:** `workflow-v26.9.json`
 - **Current Development Workflow:** `workflow-v27.5.json`
 - **Previous Candidate:** `workflow-v27.4.json` (superseded by v27.5; retained top-level for comparison)
-- **Current Prompt:** `prompt-v28.txt`
+- **Production Prompt:** `prompt-v28.txt`
+- **Current Development Prompt:** `prompt-v29.txt` (adds the BUG-010 fix; NOT deployed)
 - **Historical Versions:** `production/archive/`
 
 ## Current
@@ -23,7 +24,8 @@ and an artifact disagree, the artifact wins and the documentation is corrected.
 | `workflow-v26.9.json` | **Production of record** — the n8n workflow currently deployed. Investigate production bugs against this file. |
 | `workflow-v27.5.json` | **Current working head** — latest release candidate (NOT deployed). Build new fixes on this file so they inherit prior candidate fixes (BUG-001/002/003/009). |
 | `workflow-v27.4.json` | **Previous candidate** — superseded by v27.5 (adds the BUG-009 fix). Retained top-level for one cycle for comparison; may be archived later. |
-| `prompt-v28.txt` | **Current prompt** — the ElevenLabs system prompt in production. |
+| `prompt-v28.txt` | **Production prompt** — the ElevenLabs system prompt currently deployed. |
+| `prompt-v29.txt` | **Current development prompt** — candidate (NOT deployed); adds the BUG-010 fix (concise success confirmation, single pre-booking summary, spoken 10-digit phone). |
 
 Which version to use:
 

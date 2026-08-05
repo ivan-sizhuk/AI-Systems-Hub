@@ -6,3 +6,4 @@ status, and rollback. This complements `../CHANGELOG.md` (the running log) with 
 focused, self-contained note per version.
 
 - [v27.5.md](v27.5.md) — BUG-009 fix (Return Customer Lookup timezone-safe session-phone parsing). Release candidate, not deployed.
+- [prompt-v29.md](prompt-v29.md) — BUG-010 fix (booking confirmation UX: concise success + single pre-booking summary; spoken 10-digit phone). Prompt-only release candidate, not deployed.
