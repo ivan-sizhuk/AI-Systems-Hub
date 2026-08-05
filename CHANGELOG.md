@@ -1,5 +1,14 @@
 # Changelog
 
+## Prompt V29 (release candidate — NOT DEPLOYED)
+
+- Fix (BUG-010): booking confirmation UX. Two sub-issues, prompt-only, smallest change (three edits to the ElevenLabs system prompt); no workflow, tool, Sheets, Calendar, or storage change.
+  - (A) Redundant booking confirmations: made the post-booking success message concise — it now confirms completion + date/time and keeps the pricing disclaimer and technician note, without re-reading name/vehicle/service/phone; and added a guard that the complete appointment summary is read back EXACTLY ONCE, immediately before booking, and never before/just after the availability check. The single mandatory pre-booking summary (Explicit Confirmation contract) is preserved.
+  - (B) Spoken phone formatting: added a vocalization rule — when speaking a North American phone number aloud, say the full 10-digit national number without the leading country code "1", grouped (e.g., +14372415892 → "437-241-5892"); never truncate or read only the last four digits. Storage and tool inputs remain full E.164 — unchanged.
+- Regression: all BUG-010 checks pass (single pre-booking summary; concise success; read-once/not-before-availability guard; spoken 10-digit phone; E.164 storage/tool-input rules, Explicit-Confirmation contract, "never say booked unless success=true AND booked=true", and pricing disclaimer all preserved). See releases/prompt-v29.md. Note: verification is prompt-content/inspection-based; live conversational verification (real calls) is part of the QA gate.
+- Status: supersedes Prompt V28 as the current development prompt. NOT DEPLOYED (production prompt remains V28). Live-call QA outstanding.
+- Note: sub-issue A's first confirmation (#1) has an unknown origin (not the workflow, tool responses, or documented prompt — see INV-010); the read-once guard is a mitigation whose effect must be confirmed by conversational testing.
+
 ## Prompt V28 (current production)
 
 - Maintenance refactor from the Prompt Audit — behavior-identical by design; no business logic, tool selection, or customer-facing scripts changed.
