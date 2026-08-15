@@ -55,3 +55,5 @@ Not active work; not reopened unless new evidence reintroduces the concern.
 | Bug ID | Title | Severity | Status | One-line description |
 |---|---|:---:|---|---|
 | [BUG-008](BUG-008.md) | Transactional Integrity Investigation | N/A | Closed | Investigation into whether booking/reschedule/cancellation are transactional across Calendar/Sheets/Call Records. After additional testing the issue could not be reproduced; no confirmed defect currently exists. Retained as historical documentation. |
+
+- [BUG-012](BUG-012.md) — Estimate classifier quotes a repair price for undiagnosed leaks/transmission (High) — Approved; fixed in workflow-v27.6 (not yet deployed)
