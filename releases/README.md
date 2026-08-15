@@ -5,5 +5,6 @@ here describing what changed, why, the scope, regression results, deployment
 status, and rollback. This complements `../CHANGELOG.md` (the running log) with a
 focused, self-contained note per version.
 
+- [v27.6.md](v27.6.md) — BUG-012 fix (estimate classifier: undiagnosed leak/transmission route to diagnostic). Generated from verified live V27.5; NOT DEPLOYED until imported. **Current version on deploy.**
 - [v27.5.md](v27.5.md) — BUG-009 fix (Return Customer Lookup timezone-safe session-phone parsing). Release candidate, not deployed.
 - [prompt-v29.md](prompt-v29.md) — BUG-010 fix (booking confirmation UX: concise success + single pre-booking summary; spoken 10-digit phone). Prompt-only release candidate, not deployed.

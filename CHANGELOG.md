@@ -1,5 +1,18 @@
 # Changelog
 
+> **Versioning model:** the latest implemented workflow version is the single source of truth; earlier "production of record" references in the historical entries below are superseded by this model. Current version: **v27.6** (generated; deploy per OPERATIONS.md). Older versions live in `production/archive/` for history and rollback.
+
+## Workflow V27.6 (current — generated 2026-08-15; NOT DEPLOYED until imported)
+
+- Fix (BUG-012): the estimate classifier quoted a repair price for undiagnosed leaks and undiagnosed transmission complaints instead of recommending a diagnostic — violating tests/diagnostics.md ("Must Never: invent a repair price for an undiagnosed symptom" / "skip the diagnostic recommendation for vague symptoms (noises, leaks, overheating, electrical, transmission concerns)").
+- Root cause (INV-012): diagnosticOnly = isVagueSymptom && !hasNamedService; "leak" absent from symptomOnlyKeywords and leak-adjacent components in namedServiceKeywords force diagnosticOnly=false; bare "transmission" in neither set.
+- Fix (Option 2): a narrow diagnostic-dominant gate on serviceRaw — leak -> diagnostic unless an explicit replacement verb + a named component is present; transmission complaint -> diagnostic unless fluid/flush/service/change is named. matchService, catalog prices, the diagnostic branch, outputs, and the tool contract are unchanged.
+- Scope: exactly 1 node changed (Estimate Job Ballpark), one region. No prompt/pricing/matching/catalytic change; other 131 nodes, connections, and settings byte-identical to live V27.5.
+- Baseline: generated from the VERIFIED LIVE V27.5 (not the repo v27.5 file). Repo v27.5 had availableInMCP=false; live V27.5 had availableInMCP=true (all 132 nodes + wiring matched; discrepancy limited to availableInMCP). V27.6 preserves availableInMCP=true, executionOrder=v1.
+- Regression: 18/18 logic-sim assertions pass against the generated artifact. Live-call QA NOT performed. See releases/v27.6.md.
+- Status: Stage 4 artifact generated. NOT DEPLOYED. On import, v27.6 becomes current and v27.5 moves to production/archive/.
+
+
 ## Prompt V29 (release candidate — NOT DEPLOYED)
 
 - Fix (BUG-010): booking confirmation UX. Two sub-issues, prompt-only, smallest change (three edits to the ElevenLabs system prompt); no workflow, tool, Sheets, Calendar, or storage change.
