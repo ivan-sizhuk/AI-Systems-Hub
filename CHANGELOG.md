@@ -1,8 +1,17 @@
 # Changelog
 
-> **Versioning model:** the latest implemented workflow version is the single source of truth; earlier "production of record" references in the historical entries below are superseded by this model. Current version: **v27.6** (generated; deploy per OPERATIONS.md). Older versions live in `production/archive/` for history and rollback.
+> **Versioning model:** the latest implemented workflow version is the single source of truth; earlier "production of record" references in the historical entries below are superseded by this model. Current version: **v27.7** (generated; deploy per OPERATIONS.md). v27.6 is deployed and superseded by v27.7. Older versions live in `production/archive/` for history and rollback.
 
-## Workflow V27.6 (current — generated 2026-08-15; NOT DEPLOYED until imported)
+## Workflow V27.7 (current — generated 2026-08-17; NOT DEPLOYED until imported)
+
+- Fix (BUG-013): after BUG-012, the estimate classifier still invented repair prices for undiagnosed symptoms beyond leak/transmission (e.g. car won't start -> starter $549, AC not blowing cold -> a/c compressor $899, steering shakes when braking -> wheel alignment $129). Root cause (INV-013): the diagnostic gate covered only a narrow symptom vocabulary + leak + literal "transmission"; all other symptom families fell through to hasNamedService/matchService.
+- Fix: diagnosticOnly = isSymptom && !explicitNamedRequest. isSymptom covers the full symptom-family lexicon (noises, vibration, no-start, rough-run/misfire, overheating, smells/smoke, electrical/warning-lights, AC-not-cold, pulling, battery-dying, loose/soft feel, hard-shift/slip, leak/drip/puddle, vague "something wrong"). explicitNamedRequest (acquisition verb + named catalog component) preserves named-service pricing and the leak/transmission carve-outs. The self-diagnosed named-service policy is preserved.
+- Also: the diagnostic-branch message now frames the diagnostic as the FIRST STEP toward a repair estimate, states the diagnostic fee is waived if the customer proceeds with the recommended repair, and encourages booking. No diagnostic price is quoted (startingAtPrice/startingAtText blanked).
+- Scope: exactly 1 node changed (Estimate Job Ballpark). No prompt/catalog/matcher/booking/availability/MCP/Twilio/calendar change; other 131 nodes, connections, and settings identical to live V27.6. Preserves availableInMCP=true, executionOrder=v1.
+- Baseline: generated from the VERIFIED LIVE V27.6 (live==repo V27.6 except the n8n-assigned versionId).
+- Regression: 118-case two-sided matrix + 32-input symptom sweep. Side A: 0 invented repair prices for symptoms (was 12); 31/32 -> diagnostic; 1 adversarial idiom -> $0 book-a-visit. Side B: 0/59 catalog services mis-routed; 0 named/explicit/mixed requests diagnosed. Live-call QA NOT performed. See releases/v27.7.md.
+
+## Workflow V27.6 (generated — generated 2026-08-15; NOT DEPLOYED until imported)
 
 - Fix (BUG-012): the estimate classifier quoted a repair price for undiagnosed leaks and undiagnosed transmission complaints instead of recommending a diagnostic — violating tests/diagnostics.md ("Must Never: invent a repair price for an undiagnosed symptom" / "skip the diagnostic recommendation for vague symptoms (noises, leaks, overheating, electrical, transmission concerns)").
 - Root cause (INV-012): diagnosticOnly = isVagueSymptom && !hasNamedService; "leak" absent from symptomOnlyKeywords and leak-adjacent components in namedServiceKeywords force diagnosticOnly=false; bare "transmission" in neither set.

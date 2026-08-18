@@ -154,3 +154,75 @@ Routed to a diagnostic when the caller explicitly asked to replace a named compo
 
 ## Must Never
 - Suppress a clearly-named replacement into a diagnostic.
+
+---
+
+# Scenario: Undiagnosed symptom families route to diagnostic (BUG-013)
+
+## Customer Input
+Any undiagnosed symptom with no explicitly requested service, e.g. "my car won't start", "the AC isn't blowing cold", "there's a grinding noise", "it's making a knocking sound", "the engine has a rough idle", "my check engine light is on", "there's an electrical problem", "it's shaking on the highway", "smells like something's burning", "it pulls to the right", "the battery keeps dying", "the steering feels loose", "it's hard to shift".
+
+## Expected Conversation Flow
+The AI routes to a diagnostic and does NOT quote a repair price. It frames the diagnostic as the first step toward a repair estimate and invites booking.
+
+## Expected Tool Usage
+estimate_job_ballpark returns diagnosticOnly=true, serviceCategory="diagnostic", startingAtPrice empty.
+
+## Expected Outcome
+Diagnostic recommended as the first step; offer to book.
+
+## Failure Conditions
+Any specific repair price quoted for the undiagnosed symptom, or a `$0` "book a repair visit" that omits the diagnostic recommendation.
+
+## Must Never
+- Invent or quote a repair price, labor time, or repair estimate from a symptom alone.
+
+---
+
+# Scenario: Named service stays priceable after BUG-013
+
+## Customer Input
+"front brake pads", "I need an oil change", "muffler replacement", "I need an alternator replacement", "swap my summer tires".
+
+## Expected Tool Usage
+estimate_job_ballpark returns diagnosticOnly=false with the matched service and its starting price.
+
+## Failure Conditions
+An explicitly requested named service routed to a diagnostic.
+
+## Must Never
+- Turn a clearly named, explicitly requested catalog service into a diagnostic.
+
+---
+
+# Scenario: Self-diagnosed named part preserves existing policy (BUG-013)
+
+## Customer Input
+"I'm pretty sure I need brake pads", "my ball joint is worn, replace it", "I think it's the starter", "probably a ball joint".
+
+## Expected Conversation Flow
+The existing self-diagnosed/named-service policy is unchanged: the AI treats the named service as the requested service (priced), per prompt-v28's diagnosticOnly=true + named-service handling.
+
+## Failure Conditions
+BUG-013 silently changing self-diagnosed named-part handling into a generic diagnostic.
+
+## Must Never
+- Change the established named-service/self-diagnosis policy while solving symptom routing.
+
+---
+
+# Scenario: Diagnostic message — first step, fee waiver, booking (BUG-013)
+
+## Expected Outcome
+When diagnosticOnly=true for a vague symptom, the relayed message must:
+- present the diagnostic as the FIRST STEP to identify the actual cause (not the end goal);
+- state the technician determines the needed repair and provides an accurate estimate after diagnosis;
+- state the diagnostic fee is waived if the customer proceeds with the recommended repair;
+- actively encourage booking;
+- NOT quote any diagnostic price or any repair price.
+
+## Failure Conditions
+Message says "I can only book you for a diagnostic", presents the diagnostic as a paid endpoint, quotes a diagnostic or repair price, or omits the booking invitation.
+
+## Must Never
+- Present the diagnostic as a $ purchase or the end goal.
