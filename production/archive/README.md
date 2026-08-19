@@ -33,3 +33,5 @@ Prompts:
 Rollback is an operations action (see `../../OPERATIONS.md`). The immediate
 rollback targets are `workflow-v26.8.json` and `prompt-v27.txt` here; a specific
 older version can be restored from this archive or from Git as needed.
+
+<!-- 2026-08-18 (V27.8 reorg): moved workflow-v26.9/v27.4/v27.5/v27.6/v27.7.json here from production/ top-level. Byte-for-byte, unmodified. Latest workflow (v27.8) remains in production/. -->

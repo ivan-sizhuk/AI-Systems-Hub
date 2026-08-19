@@ -1,6 +1,6 @@
 # Release Notes — Prompt v29
 
-**Type:** Bug fix (prompt-only release candidate) · **Status:** NOT DEPLOYED (production prompt remains v28)
+**Type:** Bug fix (prompt-only release candidate) · **Status:** DEPLOYED — current production prompt (supersedes v28). _Updated 2026-08-18 per owner confirmation._
 **Date:** 2026-08-04 · **Supersedes:** prompt-v28 · **Fixes:** [BUG-010](../bugs/BUG-010.md)
 **Investigation:** [INV-010](../investigations/INV-010.md)
 
