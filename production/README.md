@@ -59,7 +59,7 @@ Immediate rollback targets are `archive/workflow-v26.8.json` and
 `archive/prompt-v27.txt`.
 
 ## Current contents (after V27.8 reorg, 2026-08-18)
-- **Latest workflow:** `workflow-v27.8.json` (generated; live n8n is v27.7 pending v27.8 import).
+- **Latest workflow:** `workflow-v27.9.json` (generated; live n8n is v27.8 pending v27.9 import).
 - **Production prompt (deployed):** `prompt-v29.txt`.
 - **Previous prompt (archived):** `prompt-v28.txt` (in `archive/`).
 - **Archived for history/rollback (byte-for-byte, never modified):** all workflow versions v26.6–v27.7 and `prompt-v27.txt` live in `archive/`.

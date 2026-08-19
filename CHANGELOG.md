@@ -1,6 +1,6 @@
 # Changelog
 
-> **Versioning model:** the latest implemented workflow version is the single source of truth; earlier "production of record" references in the historical entries below are superseded by this model. Current version: **v27.8** (generated; deploy per OPERATIONS.md). v27.7 is deployed and superseded by v27.8. Older versions live in `production/archive/` for history and rollback.
+> **Versioning model:** the latest implemented workflow version is the single source of truth; earlier "production of record" references in the historical entries below are superseded by this model. Current version: **v27.9** (generated; deploy per OPERATIONS.md). v27.8 is deployed and superseded by v27.9. Older versions live in `production/archive/` for history and rollback.
 
 ## Repository hygiene (2026-08-18)
 
@@ -9,7 +9,18 @@
 - Prompts: `prompt-v28.txt` (deployed production) and `prompt-v29.txt` (not-deployed BUG-010 candidate) remain in `production/`; the only superseded prompt, `prompt-v27.txt`, was already archived. No prompt files were moved or altered.
 - Archived files are historical rollback artifacts and are not modified.
 
-## Workflow V27.8 (current — generated 2026-08-18; NOT DEPLOYED until imported)
+## Workflow V27.9 (current — generated 2026-08-19; NOT DEPLOYED until imported)
+
+- Fix (BUG-014, matcher-confidence guard): a weak/ambiguous matcher result could still price a repair for an undiagnosed symptom — a single token that stem-collapses into a service key ("start" -> "starter") scored >=2 and quoted a $549 starter for "hard to start in the morning" / "can't get it to start". Symptom and request score identically, so min-score/min-margin guards cannot separate them.
+- Fix (Design D, corroboration guard): in Estimate Job Ballpark, price a matched repair only if the caller explicitly requested the named service OR actually said a surface form of the matched service's part word; otherwise route to diagnostic. matchService scoring is unchanged.
+- Unchanged: matchService, the diagnostic message (byte-identical), the self-diagnosis/named-service policy, prompt-v29, catalog/pricing, booking/availability/MCP/Twilio/Calendar.
+- Scope: exactly 1 node changed (Estimate Job Ballpark), guard added at the diagnosticOnly boundary. Other 131 nodes, connections, settings identical to live V27.8. Preserves availableInMCP=true, executionOrder=v1.
+- Baseline: generated from VERIFIED LIVE V27.8 (deployed EJB byte-identical to repo V27.8).
+- Regression: 139-case matrix + boundary suite. invented-price 4 -> 0; catalog/self-diagnosis/mixed regressions 0; named requests all priced; boundary/self-diagnosis unchanged vs V27.8. Live-call QA NOT performed. See releases/v27.9.md.
+- Scope of guarantee (honest): meets "no specific repair price from a weak/ambiguous match"; a symptom naming its own component remains the classifier's domain (the unqualified "NEVER" is not claimed).
+- Deferred: BUG-015 (pricing disambiguation).
+
+## Workflow V27.8 (generated — generated 2026-08-18; NOT DEPLOYED until imported)
 
 - Fix (BUG-016, follow-up to BUG-013): live V27.7 QA showed the diagnostic classifier still invented repair prices for natural-language symptom variants — "AC isn't blowing cold" -> a/c compressor $899, "the abs light is on" -> abs sensor $249, "power windows stopped working" -> power steering fluid $109, "shimmy in the steering" -> power steering fluid $109 — plus 7 symptom phrasings that fell to a $0 book-a-visit.
 - Fix: extended the BUG-013 symptomKeywords lexicon (classifier-only) to cover contractions, specific warning lights, electrical failures, vibration synonym "shimmy", no-start idiom "turn over", overheating phrasings, pulling synonyms drift/wander, and "needs a jump". Added "recharge" to namedServiceKeywords so explicit "AC recharge" requests stay carved out.

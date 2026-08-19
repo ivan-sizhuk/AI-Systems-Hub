@@ -61,3 +61,5 @@ Not active work; not reopened unless new evidence reintroduces the concern.
 - [BUG-013](BUG-013.md) — Estimate classifier still invents repair prices for undiagnosed symptoms beyond leak/transmission (High) — Approved; fixed in workflow-v27.7 (not yet deployed)
 
 - [BUG-016](BUG-016.md) — BUG-013 follow-up: residual symptom-lexicon gaps invent repair prices for natural-language variants (High) — Approved; fixed in workflow-v27.8 (not yet deployed)
+
+- [BUG-014](BUG-014.md) — matchService prices a repair from a weak/ambiguous single-token match for an undiagnosed symptom (High) — Approved; fixed in workflow-v27.9 (not yet deployed)
