@@ -226,3 +226,32 @@ Message says "I can only book you for a diagnostic", presents the diagnostic as 
 
 ## Must Never
 - Present the diagnostic as a $ purchase or the end goal.
+
+---
+
+# Scenario: Natural-language symptom variants route to diagnostic (BUG-016 / V27.8)
+
+## Customer Input
+Contractions and idioms for undiagnosed problems, e.g. "AC isn't blowing cold", "the AC stopped cooling", "the abs light is on", "my oil light came on", "power windows stopped working", "the lights flicker", "there's a shimmy in the steering", "it won't turn over", "temperature gauge goes into the red", "it's running hot", "the car keeps needing a jump", "it drifts to one side", "the car just isn't driving right".
+
+## Expected Tool Usage
+estimate_job_ballpark returns diagnosticOnly=true, serviceCategory="diagnostic", no repair price.
+
+## Failure Conditions
+Any specific repair price quoted (e.g. a/c compressor for "AC isn't cold", abs sensor for "abs light", power steering fluid for "shimmy"), or a $0 book-a-visit that omits the diagnostic recommendation.
+
+## Must Never
+- Invent a repair price for a symptom stated with a contraction, warning-light phrasing, or component-adjacent wording.
+
+---
+
+# Scenario: Explicit AC recharge request stays priced (BUG-016 carve-out)
+
+## Customer Input
+"can you recharge my AC", "I need an AC recharge".
+
+## Expected Tool Usage
+estimate_job_ballpark returns diagnosticOnly=false (a named service). (Note: which AC service the matcher selects is tracked separately under BUG-015.)
+
+## Failure Conditions
+An explicit AC recharge request routed to a diagnostic.

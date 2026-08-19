@@ -13,8 +13,8 @@ and an artifact disagree, the artifact wins and the documentation is corrected.
 - **Production Workflow:** `workflow-v26.9.json`
 - **Current Development Workflow:** `workflow-v27.5.json`
 - **Previous Candidate:** `workflow-v27.4.json` (superseded by v27.5; retained top-level for comparison)
-- **Production Prompt:** `prompt-v28.txt`
-- **Current Development Prompt:** `prompt-v29.txt` (adds the BUG-010 fix; NOT deployed)
+- **Production Prompt (deployed):** `prompt-v29.txt`
+- **Previous production prompt (archived):** `prompt-v28.txt` (moved to `archive/`)
 - **Historical Versions:** `production/archive/`
 
 ## Current
@@ -24,8 +24,8 @@ and an artifact disagree, the artifact wins and the documentation is corrected.
 | `workflow-v26.9.json` | **Production of record** — the n8n workflow currently deployed. Investigate production bugs against this file. |
 | `workflow-v27.5.json` | **Current working head** — latest release candidate (NOT deployed). Build new fixes on this file so they inherit prior candidate fixes (BUG-001/002/003/009). |
 | `workflow-v27.4.json` | **Previous candidate** — superseded by v27.5 (adds the BUG-009 fix). Retained top-level for one cycle for comparison; may be archived later. |
-| `prompt-v28.txt` | **Production prompt** — the ElevenLabs system prompt currently deployed. |
-| `prompt-v29.txt` | **Current development prompt** — candidate (NOT deployed); adds the BUG-010 fix (concise success confirmation, single pre-booking summary, spoken 10-digit phone). |
+| `prompt-v29.txt` | **Production prompt** — the ElevenLabs system prompt currently deployed (includes the BUG-010 fix). |
+| `prompt-v28.txt` | Previous production prompt — superseded by v29; kept in `archive/` for rollback. |
 
 Which version to use:
 
@@ -57,3 +57,9 @@ and it is promoted to "Production of record" above.
 Superseded/rollback workflows and prompts: see [`archive/`](archive/README.md).
 Immediate rollback targets are `archive/workflow-v26.8.json` and
 `archive/prompt-v27.txt`.
+
+## Current contents (after V27.8 reorg, 2026-08-18)
+- **Latest workflow:** `workflow-v27.8.json` (generated; live n8n is v27.7 pending v27.8 import).
+- **Production prompt (deployed):** `prompt-v29.txt`.
+- **Previous prompt (archived):** `prompt-v28.txt` (in `archive/`).
+- **Archived for history/rollback (byte-for-byte, never modified):** all workflow versions v26.6–v27.7 and `prompt-v27.txt` live in `archive/`.

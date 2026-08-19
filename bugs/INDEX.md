@@ -59,3 +59,5 @@ Not active work; not reopened unless new evidence reintroduces the concern.
 - [BUG-012](BUG-012.md) — Estimate classifier quotes a repair price for undiagnosed leaks/transmission (High) — Approved; fixed in workflow-v27.6 (not yet deployed)
 
 - [BUG-013](BUG-013.md) — Estimate classifier still invents repair prices for undiagnosed symptoms beyond leak/transmission (High) — Approved; fixed in workflow-v27.7 (not yet deployed)
+
+- [BUG-016](BUG-016.md) — BUG-013 follow-up: residual symptom-lexicon gaps invent repair prices for natural-language variants (High) — Approved; fixed in workflow-v27.8 (not yet deployed)

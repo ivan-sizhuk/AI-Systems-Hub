@@ -1,8 +1,25 @@
 # Changelog
 
-> **Versioning model:** the latest implemented workflow version is the single source of truth; earlier "production of record" references in the historical entries below are superseded by this model. Current version: **v27.7** (generated; deploy per OPERATIONS.md). v27.6 is deployed and superseded by v27.7. Older versions live in `production/archive/` for history and rollback.
+> **Versioning model:** the latest implemented workflow version is the single source of truth; earlier "production of record" references in the historical entries below are superseded by this model. Current version: **v27.8** (generated; deploy per OPERATIONS.md). v27.7 is deployed and superseded by v27.8. Older versions live in `production/archive/` for history and rollback.
 
-## Workflow V27.7 (current — generated 2026-08-17; NOT DEPLOYED until imported)
+## Repository hygiene (2026-08-18)
+
+- Prompts: prompt-v29 confirmed deployed (current production prompt); moved the superseded `prompt-v28.txt` into `production/archive/`. Removed stray root packaging artifacts (APPLY.md, BUG-012 patches, CHANGES.diff).
+- Reorganized `production/` to hold only the latest workflow: moved `workflow-v26.9/v27.4/v27.5/v27.6/v27.7.json` into `production/archive/` (byte-for-byte, unmodified; retained for rollback/forensics). `workflow-v27.8.json` remains the current top-level workflow.
+- Prompts: `prompt-v28.txt` (deployed production) and `prompt-v29.txt` (not-deployed BUG-010 candidate) remain in `production/`; the only superseded prompt, `prompt-v27.txt`, was already archived. No prompt files were moved or altered.
+- Archived files are historical rollback artifacts and are not modified.
+
+## Workflow V27.8 (current — generated 2026-08-18; NOT DEPLOYED until imported)
+
+- Fix (BUG-016, follow-up to BUG-013): live V27.7 QA showed the diagnostic classifier still invented repair prices for natural-language symptom variants — "AC isn't blowing cold" -> a/c compressor $899, "the abs light is on" -> abs sensor $249, "power windows stopped working" -> power steering fluid $109, "shimmy in the steering" -> power steering fluid $109 — plus 7 symptom phrasings that fell to a $0 book-a-visit.
+- Fix: extended the BUG-013 symptomKeywords lexicon (classifier-only) to cover contractions, specific warning lights, electrical failures, vibration synonym "shimmy", no-start idiom "turn over", overheating phrasings, pulling synonyms drift/wander, and "needs a jump". Added "recharge" to namedServiceKeywords so explicit "AC recharge" requests stay carved out.
+- Unchanged: decision rule diagnosticOnly = isSymptom && !explicitNamedRequest; named-service/self-diagnosis policy; leak/transmission carve-outs; the diagnostic customer-facing message (byte-identical to V27.7).
+- Scope: exactly 1 node changed (Estimate Job Ballpark), two regex lines. No prompt/catalog/matcher/booking/availability/MCP/Twilio/calendar/Sheets change; other 131 nodes, connections, settings identical to live V27.7. Preserves availableInMCP=true, executionOrder=v1.
+- Baseline: generated from VERIFIED LIVE V27.7 (deployed EJB byte-identical to repo V27.7).
+- Regression: 155-case matrix + full prior QA matrix re-run. 0 critical false positives, 0 benign $0 fallbacks, 0 named-service regressions, 0 self-diagnosis regressions, 0 new pricing mismatches. Live-call QA NOT performed. See releases/v27.8.md.
+- Deferred: BUG-014 (matcher confidence guard), BUG-015 (pricing disambiguation incl. "AC recharge"->a/c compressor).
+
+## Workflow V27.7 (generated — generated 2026-08-17; NOT DEPLOYED until imported)
 
 - Fix (BUG-013): after BUG-012, the estimate classifier still invented repair prices for undiagnosed symptoms beyond leak/transmission (e.g. car won't start -> starter $549, AC not blowing cold -> a/c compressor $899, steering shakes when braking -> wheel alignment $129). Root cause (INV-013): the diagnostic gate covered only a narrow symptom vocabulary + leak + literal "transmission"; all other symptom families fell through to hasNamedService/matchService.
 - Fix: diagnosticOnly = isSymptom && !explicitNamedRequest. isSymptom covers the full symptom-family lexicon (noises, vibration, no-start, rough-run/misfire, overheating, smells/smoke, electrical/warning-lights, AC-not-cold, pulling, battery-dying, loose/soft feel, hard-shift/slip, leak/drip/puddle, vague "something wrong"). explicitNamedRequest (acquisition verb + named catalog component) preserves named-service pricing and the leak/transmission carve-outs. The self-diagnosed named-service policy is preserved.
@@ -22,7 +39,7 @@
 - Status: Stage 4 artifact generated. NOT DEPLOYED. On import, v27.6 becomes current and v27.5 moves to production/archive/.
 
 
-## Prompt V29 (release candidate — NOT DEPLOYED)
+## Prompt V29 (current production — DEPLOYED, confirmed by owner 2026-08-18)
 
 - Fix (BUG-010): booking confirmation UX. Two sub-issues, prompt-only, smallest change (three edits to the ElevenLabs system prompt); no workflow, tool, Sheets, Calendar, or storage change.
   - (A) Redundant booking confirmations: made the post-booking success message concise — it now confirms completion + date/time and keeps the pricing disclaimer and technician note, without re-reading name/vehicle/service/phone; and added a guard that the complete appointment summary is read back EXACTLY ONCE, immediately before booking, and never before/just after the availability check. The single mandatory pre-booking summary (Explicit Confirmation contract) is preserved.
@@ -31,7 +48,7 @@
 - Status: supersedes Prompt V28 as the current development prompt. NOT DEPLOYED (production prompt remains V28). Live-call QA outstanding.
 - Note: sub-issue A's first confirmation (#1) has an unknown origin (not the workflow, tool responses, or documented prompt — see INV-010); the read-once guard is a mitigation whose effect must be confirmed by conversational testing.
 
-## Prompt V28 (current production)
+## Prompt V28 (superseded by V29; archived in production/archive/)
 
 - Maintenance refactor from the Prompt Audit — behavior-identical by design; no business logic, tool selection, or customer-facing scripts changed.
 - F2: three estimate-disclaimer variants consolidated to one canonical line matching the workflow message ("The technician will confirm the final price after inspecting the vehicle.").
