@@ -255,3 +255,32 @@ estimate_job_ballpark returns diagnosticOnly=false (a named service). (Note: whi
 
 ## Failure Conditions
 An explicit AC recharge request routed to a diagnostic.
+
+---
+
+# Scenario: Weak/ambiguous match must not price a repair (BUG-014 / V27.9)
+
+## Customer Input
+Undiagnosed symptoms whose only overlap with a service is a lone generic/stem token, e.g. "hard to start in the morning", "can't get it to start", "having trouble starting", "it barely starts".
+
+## Expected Tool Usage
+estimate_job_ballpark returns diagnosticOnly=true, serviceCategory="diagnostic", no repair price — the caller did not request or name the part.
+
+## Failure Conditions
+Any specific repair price quoted (e.g. starter $549) from a weak single-token match.
+
+## Must Never
+- Price a repair when the matched service's part word was neither explicitly requested nor actually spoken by the caller.
+
+---
+
+# Scenario: Named service / self-diagnosis remains priced under BUG-014
+
+## Customer Input
+"starter", "I need a starter", "I think I need a starter", "replace my starter", "my starter is going bad", "probably the starter", "starter keeps clicking", "sounds like my radiator", "my mechanic said I need a ball joint".
+
+## Expected Tool Usage
+estimate_job_ballpark returns diagnosticOnly=false with the matched service and price — the part word is present/corroborated, so the existing named-service/self-diagnosis policy is preserved (unchanged from V27.8).
+
+## Failure Conditions
+Any of these routed to a diagnostic (would be a self-diagnosis policy regression).
